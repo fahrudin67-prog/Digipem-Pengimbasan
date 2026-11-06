@@ -1,0 +1,2606 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ECO-GALAXY ODYSSEY: Petualangan 3D Integrasi Adiwiyata & AI</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Three.js WebGL Engine -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- Google Fonts & FontAwesome -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <style>
+    :root {
+      --bg-deep: #07120f;
+      --emerald-glow: #34d399;
+      --cyan-glow: #38bdf8;
+      --amber-glow: #fbbf24;
+      --panel-bg: rgba(13, 28, 24, 0.78);
+      --panel-border: rgba(52, 211, 153, 0.28);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg-deep);
+      color: #e2e8f0;
+    }
+
+    .font-tech {
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    /* Fullscreen 3D Canvas */
+    #webgl-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      outline: none;
+    }
+
+    /* Ambient Vignette & Scanline Overlay */
+    .vignette-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+      background: radial-gradient(circle at 50% 50%, transparent 55%, rgba(4, 12, 10, 0.75) 100%);
+    }
+
+    /* HUD Layer */
+    #hud-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 16px 24px;
+      transition: opacity 0.4s ease;
+    }
+
+    .hud-interactive {
+      pointer-events: auto;
+    }
+
+    /* Soft Eye-Comfort Cyber-Eco Glassmorphism */
+    .eco-glass {
+      background: var(--panel-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--panel-border);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+
+    .eco-glass-subtle {
+      background: rgba(15, 31, 38, 0.65);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+    }
+
+    /* Custom Scrollbar for Quest Content */
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.4);
+      border-radius: 8px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: rgba(52, 211, 153, 0.4);
+      border-radius: 8px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: rgba(52, 211, 153, 0.7);
+    }
+
+    /* Animations */
+    @keyframes floatSlow {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-6px); }
+    }
+    .animate-float {
+      animation: floatSlow 4s ease-in-out infinite;
+    }
+
+    @keyframes pulseRing {
+      0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.5); }
+      70% { box-shadow: 0 0 0 10px rgba(52, 211, 153, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+    }
+    .pulse-emerald {
+      animation: pulseRing 2.5s infinite;
+    }
+
+    /* Button Styles */
+    .btn-eco {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(14, 165, 233, 0.25));
+      border: 1px solid rgba(52, 211, 153, 0.45);
+      color: #ecfdf5;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .btn-eco:hover {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.45), rgba(14, 165, 233, 0.4));
+      border-color: #34d399;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25);
+    }
+    .btn-eco:active {
+      transform: translateY(0px);
+    }
+
+    .btn-amber {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.25));
+      border: 1px solid rgba(251, 191, 36, 0.5);
+      color: #fef3c7;
+      transition: all 0.25s ease;
+    }
+    .btn-amber:hover {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.45), rgba(217, 119, 6, 0.4));
+      border-color: #fbbf24;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(245, 158, 11, 0.25);
+    }
+
+    /* Node Trail Item */
+    .waypoint-dot {
+      transition: all 0.3s ease;
+    }
+    .waypoint-dot.active {
+      background: #34d399;
+      color: #064e3b;
+      border-color: #a7f3d0;
+      transform: scale(1.18);
+      box-shadow: 0 0 15px rgba(52, 211, 153, 0.7);
+    }
+    .waypoint-dot.completed {
+      background: rgba(52, 211, 153, 0.25);
+      border-color: rgba(52, 211, 153, 0.6);
+      color: #6ee7b7;
+    }
+
+    /* Card Transitions */
+    .quest-transition {
+      transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .quest-hidden {
+      opacity: 0;
+      transform: translateY(12px) scale(0.98);
+    }
+
+    /* Equalizer Visualizer Bars */
+    @keyframes eqBounce1 {
+      0%, 100% { height: 4px; }
+      50% { height: 15px; }
+    }
+    @keyframes eqBounce2 {
+      0%, 100% { height: 14px; }
+      40% { height: 4px; }
+      80% { height: 16px; }
+    }
+    @keyframes eqBounce3 {
+      0%, 100% { height: 6px; }
+      35% { height: 16px; }
+      70% { height: 5px; }
+    }
+    .eq-bar {
+      width: 3px;
+      background: linear-gradient(to top, #10b981, #38bdf8);
+      border-radius: 99px;
+      height: 4px;
+      transition: height 0.2s ease;
+    }
+    .eq-playing .eq-bar:nth-child(1) { animation: eqBounce1 0.8s infinite ease-in-out; }
+    .eq-playing .eq-bar:nth-child(2) { animation: eqBounce2 0.65s infinite ease-in-out; }
+    .eq-playing .eq-bar:nth-child(3) { animation: eqBounce3 0.9s infinite ease-in-out; }
+    .eq-playing .eq-bar:nth-child(4) { animation: eqBounce2 0.75s infinite ease-in-out 0.2s; }
+
+    /* Custom Range Slider */
+    input[type="range"].eco-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      background: rgba(15, 23, 42, 0.8);
+      height: 6px;
+      border-radius: 99px;
+      border: 1px solid rgba(52, 211, 153, 0.35);
+    }
+    input[type="range"].eco-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #34d399;
+      cursor: pointer;
+      box-shadow: 0 0 8px rgba(52, 211, 153, 0.8);
+    }
+
+    /* CINEMATIC OPERA OPENING + HYPERREALISTIC ATMOSPHERE */
+    body::before {
+      content:""; position:fixed; inset:0; pointer-events:none; z-index:3;
+      background:
+        radial-gradient(ellipse at 50% 42%, rgba(18,110,75,.13), transparent 42%),
+        linear-gradient(180deg, rgba(1,5,7,.18), transparent 28%, rgba(1,5,7,.45));
+      mix-blend-mode:screen;
+    }
+    .opera-intro {
+      position:fixed; inset:0; z-index:1000; display:grid; place-items:center;
+      overflow:hidden; background:
+        radial-gradient(ellipse at 50% 48%, rgba(30,67,54,.58), transparent 36%),
+        radial-gradient(ellipse at center, #101c1a 0%, #050908 58%, #010303 100%);
+      transition:opacity 1.35s ease, visibility 1.35s ease;
+    }
+    .opera-intro::before, .opera-intro::after {
+      content:""; position:absolute; inset:-25%; border-radius:50%;
+      border:1px solid rgba(220,190,120,.12); transform:scale(.55) rotate(0deg);
+      animation: operaOrbit 9s linear infinite;
+    }
+    .opera-intro::after { inset:-15%; border-color:rgba(52,211,153,.1); animation-duration:14s; animation-direction:reverse; }
+    .opera-intro.is-leaving { opacity:0; visibility:hidden; pointer-events:none; }
+    .opera-stage { position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; text-align:center; padding:24px; }
+    .opera-emblem {
+      width:min(34vw,190px); height:min(34vw,190px); min-width:120px; min-height:120px;
+      filter:drop-shadow(0 0 24px rgba(52,211,153,.28)); opacity:0;
+      animation: emblemRise 1.7s cubic-bezier(.16,1,.3,1) .25s forwards;
+    }
+    .opera-emblem svg { width:100%; height:100%; overflow:visible; }
+    .opera-emblem .draw { stroke-dasharray:620; stroke-dashoffset:620; animation: emblemDraw 2.4s ease .45s forwards; }
+    .opera-title {
+      margin-top:26px; font-family:'Space Grotesk',sans-serif; font-size:clamp(18px,3.2vw,36px);
+      letter-spacing:.28em; color:#f4e7c1; text-shadow:0 0 22px rgba(251,191,36,.25);
+      opacity:0; transform:translateY(18px); animation:titleReveal 1.25s ease 1.25s forwards;
+    }
+    .opera-subtitle { margin-top:12px; color:rgba(167,243,208,.75); font-size:clamp(9px,1.2vw,12px); letter-spacing:.32em; opacity:0; animation:titleReveal 1s ease 1.9s forwards; }
+    .opera-rule { width:min(48vw,280px); height:1px; margin-top:24px; background:linear-gradient(90deg,transparent,#d6b978,transparent); transform:scaleX(0); animation:ruleReveal 1.2s ease 1.8s forwards; }
+    .opera-skip { position:absolute; bottom:30px; right:30px; z-index:3; color:rgba(226,232,240,.65); border:1px solid rgba(214,185,120,.25); border-radius:999px; padding:9px 16px; font-size:10px; letter-spacing:.16em; background:rgba(0,0,0,.25); cursor:pointer; transition:.25s; }
+    .opera-skip:hover { color:#f4e7c1; border-color:rgba(214,185,120,.7); background:rgba(214,185,120,.08); }
+    @keyframes operaOrbit { to { transform:scale(.95) rotate(360deg); } }
+    @keyframes emblemRise { from {opacity:0; transform:translateY(35px) scale(.7) rotate(-12deg)} to {opacity:1; transform:translateY(0) scale(1) rotate(0)} }
+    @keyframes emblemDraw { to {stroke-dashoffset:0} }
+    @keyframes titleReveal { to {opacity:1; transform:translateY(0)} }
+    @keyframes ruleReveal { to {transform:scaleX(1)} }
+    @media (prefers-reduced-motion:reduce) { .opera-intro *, .opera-intro::before, .opera-intro::after { animation-duration:.01ms!important; animation-delay:0ms!important; } }
+
+
+    /* HYPERREALISTIC 3D MATERIAL BACKDROP — layered on the existing hologram panel */
+    #hologram-visual-col {
+      isolation:isolate;
+      perspective:1200px;
+      transform-style:preserve-3d;
+      background:
+        radial-gradient(ellipse at 50% 18%, rgba(83,255,199,.16), transparent 48%),
+        linear-gradient(145deg, rgba(4,18,16,.96), rgba(3,8,15,.94) 58%, rgba(10,28,25,.96));
+      border-color:rgba(91,245,194,.34)!important;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.12),
+        inset 0 -30px 55px rgba(0,0,0,.34),
+        0 18px 55px rgba(0,0,0,.35),
+        0 0 32px rgba(16,185,129,.08);
+    }
+    #scene-image {
+      z-index:0;
+      opacity:.72!important;
+      filter:contrast(1.18) saturate(1.22) brightness(.88);
+      transform:scale(1.025);
+      transform-origin:center;
+      transition:transform 1.2s cubic-bezier(.2,.7,.2,1), filter 1s ease, opacity .8s ease;
+      will-change:transform,filter;
+    }
+    #hologram-visual-col.group:hover #scene-image {
+      opacity:.84!important;
+      filter:contrast(1.24) saturate(1.3) brightness(.98);
+      transform:scale(1.09);
+    }
+    #hologram-visual-col::before {
+      content:""; position:absolute; inset:0; z-index:2; pointer-events:none;
+      background:
+        linear-gradient(125deg, rgba(255,255,255,.13) 0%, transparent 14%, transparent 68%, rgba(52,211,153,.12) 100%),
+        repeating-linear-gradient(0deg, rgba(183,255,228,.025) 0px, rgba(183,255,228,.025) 1px, transparent 1px, transparent 5px),
+        radial-gradient(ellipse at 50% 50%, transparent 34%, rgba(1,8,7,.42) 100%);
+      mix-blend-mode:screen;
+    }
+    #hologram-visual-col::after {
+      content:""; position:absolute; inset:0; z-index:3; pointer-events:none;
+      border-radius:inherit;
+      background:
+        linear-gradient(110deg, transparent 0%, rgba(181,255,230,.045) 42%, rgba(212,255,243,.16) 50%, rgba(181,255,230,.035) 58%, transparent 100%);
+      background-size:220% 100%;
+      animation: holoSheen 9s ease-in-out infinite;
+      box-shadow:inset 0 0 0 1px rgba(199,255,234,.08), inset 0 0 35px rgba(52,211,153,.08);
+    }
+    #hologram-gradient-overlay { z-index:4; background:linear-gradient(to top, rgba(2,8,7,.96) 0%, rgba(2,8,7,.68) 38%, rgba(2,8,7,.12) 78%, rgba(2,8,7,.38) 100%)!important; }
+    #hologram-visual-col > .relative { z-index:10; }
+    @keyframes holoSheen { 0%,18% {background-position:150% 0} 62%,100% {background-position:-100% 0} }
+    @media (prefers-reduced-motion:reduce) {
+      #hologram-visual-col::after {animation:none}
+      #scene-image {transition:none}
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- Cinematic luxury-opera opening; dismissible and does not block any app feature -->
+  <section id="opera-intro" class="opera-intro" aria-label="Opening animation ECO GALAXY ODYSSEY">
+    <div class="opera-stage">
+      <div class="opera-emblem">
+        <svg viewBox="0 0 200 200" role="img" aria-label="Emblem daun dan orbit">
+          <defs>
+            <linearGradient id="operaGold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff1bd"/><stop offset=".48" stop-color="#c6a45d"/><stop offset="1" stop-color="#80622d"/></linearGradient>
+            <linearGradient id="operaGreen" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#047857"/><stop offset="1" stop-color="#6ee7b7"/></linearGradient>
+          </defs>
+          <circle class="draw" cx="100" cy="100" r="82" fill="none" stroke="url(#operaGold)" stroke-width="1.6"/>
+          <ellipse class="draw" cx="100" cy="100" rx="65" ry="28" fill="none" stroke="url(#operaGold)" stroke-width="1.4" transform="rotate(-38 100 100)"/>
+          <path d="M100 146 C62 124 54 80 91 48 C113 76 130 106 100 146Z" fill="url(#operaGreen)" stroke="#b7f7d7" stroke-width="1.2"/>
+          <path d="M100 145 C99 107 94 79 91 49 M100 111 L77 88 M101 128 L119 102" fill="none" stroke="#e5f9eb" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M100 146 C126 132 151 103 137 72 C117 82 103 105 100 146Z" fill="#0d8b67" stroke="#d5fbe6" stroke-width="1"/>
+          <circle cx="100" cy="100" r="4" fill="#fff0b5"/>
+        </svg>
+      </div>
+      <div class="opera-title">ECO-GALAXY ODYSSEY</div>
+      <div class="opera-subtitle">ADIWIYATA · AI · IMMERSIVE LEARNING</div>
+      <div class="opera-rule"></div>
+    </div>
+    <button class="opera-skip" type="button" onclick="dismissOperaIntro()">MASUK · SKIP INTRO</button>
+  </section>
+
+
+  <!-- Hidden HTML5 Audio Player & File Input for Local PC Backsound -->
+  <audio id="bgm-audio-element" preload="auto"></audio>
+  <input type="file" id="bgm-file-input" accept="audio/*" multiple class="hidden" onchange="handleLocalAudioUpload(event)">
+
+  <!-- 3D WebGL World Canvas -->
+  <canvas id="webgl-canvas"></canvas>
+  <div class="vignette-overlay"></div>
+
+  <!-- Floating Free-Look Restore Button (Only visible when HUD is hidden) -->
+  <div id="freelook-banner" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 hidden">
+    <div class="eco-glass px-6 py-3 rounded-full flex items-center gap-4 border border-emerald-400/50 shadow-2xl">
+      <span class="text-xs sm:text-sm font-semibold text-emerald-300 flex items-center gap-2">
+        <i class="fa-solid fa-compass fa-spin"></i> Mode Eksplorasi Dunia 3D Aktif (Gerakkan Mouse / Klik Kristal)
+      </span>
+      <button onclick="toggleHUD()" class="btn-eco px-4 py-1.5 rounded-full text-xs font-bold">
+        <i class="fa-solid fa-eye mr-1"></i> Tampilkan HUD Materi
+      </button>
+    </div>
+  </div>
+
+  <!-- MAIN GAME HUD -->
+  <div id="hud-layer">
+
+    <!-- TOP BAR: Branding, XP Progress, Timer, & Controls -->
+    <header class="hud-interactive w-full flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- Brand & Facilitator Info -->
+      <div class="eco-glass px-4 py-2.5 rounded-2xl flex items-center gap-3.5">
+        <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 shadow-inner">
+          <i class="fa-solid fa-earth-asia text-xl animate-pulse"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-tech font-bold text-sm sm:text-base tracking-wide text-white">ECO-GALAXY ODYSSEY</span>
+            <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">3D EdTech Engine</span>
+          </div>
+          <div class="text-[11px] text-slate-300 flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
+            <span class="text-amber-300 font-semibold"><i class="fa-solid fa-user-astronaut mr-1"></i>Kreator : Fahrudin, S.Pd.I</span>
+            <span class="text-slate-500">|</span>
+            <span class="hidden md:inline text-slate-300">Tim Ahli: Dewi Oktavia, S.Pd • Cahyo Ramadhan, S.Pd • Fahrudin, S.Pd.I</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center: Eco-AI Energy Bar (XP & Level) -->
+      <div class="eco-glass px-4 py-2 rounded-2xl hidden xl:flex items-center gap-4 min-w-[300px]">
+        <div class="text-left">
+          <div class="flex items-center justify-between text-xs font-bold mb-1 gap-4">
+            <span id="xp-rank-title" class="text-emerald-300"><i class="fa-solid fa-seedling mr-1"></i>Lv.1 Eco-Initiate</span>
+            <span id="xp-percent-text" class="font-tech text-sky-300">6% Energi</span>
+          </div>
+          <div class="w-52 h-2.5 bg-slate-900/90 rounded-full overflow-hidden border border-slate-700/60 p-0.5">
+            <div id="xp-bar-fill" class="h-full rounded-full bg-gradient-to-r from-emerald-400 via-sky-400 to-amber-300 transition-all duration-500" style="width: 6%;"></div>
+          </div>
+        </div>
+        <div class="border-l border-slate-700/60 pl-3 text-center">
+          <div class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Total Durasi</div>
+          <div class="text-xs font-bold text-amber-300" title="195 Menit Inti + 15 Menit Istirahat + 30 Menit Presentasi">4 Jam (240m)</div>
+        </div>
+      </div>
+
+      <!-- Right Controls: Live Timer, Audio Synth, Overview Map, Free Look -->
+      <div class="eco-glass px-3 py-2 rounded-2xl flex items-center gap-2">
+        <!-- Presenter Live Stopwatch -->
+        <button onclick="toggleStopwatch()" id="stopwatch-btn" class="px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-600/50 text-xs font-tech font-bold text-sky-300 flex items-center gap-2 transition" title="Klik untuk Mulai/Jeda Stopwatch Sesi">
+          <i class="fa-solid fa-stopwatch text-emerald-400"></i>
+          <span id="stopwatch-display">00:00</span>
+        </button>
+
+        <!-- Procedural Audio Toggle -->
+        <button onclick="toggleAudio()" id="audio-btn" class="w-9 h-9 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-emerald-300 flex items-center justify-center transition" title="Efek Suara & Ambience Sci-Fi Alam">
+          <i id="audio-icon" class="fa-solid fa-volume-high text-sm"></i>
+        </button>
+
+        <!-- Backsound Music Studio Quick Toggle + Mini Visualizer -->
+        <div class="flex items-center gap-1 bg-slate-900/80 border border-emerald-400/40 rounded-xl px-2 py-1">
+          <button onclick="toggleBgmPlay()" id="top-bgm-play-btn" class="w-7 h-7 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-300 flex items-center justify-center transition" title="Putar / Jeda Backsound Musik">
+            <i id="top-bgm-play-icon" class="fa-solid fa-play text-xs"></i>
+          </button>
+          <button onclick="toggleBgmDrawer()" class="px-2 py-1 rounded-lg hover:bg-slate-800 text-xs font-bold text-emerald-200 flex items-center gap-2 transition" title="Buka Studio Backsound & Upload MP3 dari PC">
+            <div id="top-eq-container" class="flex items-end gap-0.5 h-4">
+              <span class="eq-bar"></span>
+              <span class="eq-bar"></span>
+              <span class="eq-bar"></span>
+              <span class="eq-bar"></span>
+            </div>
+            <span class="hidden md:inline text-[11px]">Backsound</span>
+            <i class="fa-solid fa-sliders text-[10px] text-amber-300"></i>
+          </button>
+        </div>
+
+        <!-- All Scenes Matrix Modal Button -->
+        <button onclick="toggleOverviewModal()" class="px-3 py-1.5 rounded-xl btn-eco text-xs font-bold flex items-center gap-1.5" title="Peta Bintang 16 Adegan">
+          <i class="fa-solid fa-map-location-dot"></i>
+          <span class="hidden sm:inline">Peta 16 Stasiun</span>
+        </button>
+
+        <!-- Free Look 3D World Toggle -->
+        <button onclick="toggleHUD()" class="w-9 h-9 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-600/50 text-slate-200 flex items-center justify-center transition" title="Sembunyikan HUD untuk Pamerkan Dunia 3D">
+          <i class="fa-solid fa-cube text-sm text-sky-300"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- FLOATING BACKSOUND STUDIO DRAWER (Top-Right Expandable Dock) -->
+    <div id="bgm-studio-drawer" class="hud-interactive fixed top-20 right-6 z-40 w-80 sm:w-96 eco-glass rounded-3xl p-4 border border-emerald-400/50 shadow-2xl hidden flex-col gap-3 transition-all duration-300">
+      <div class="flex items-center justify-between border-b border-slate-700/70 pb-2.5">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300">
+            <i class="fa-solid fa-music"></i>
+          </div>
+          <div>
+            <h4 class="text-xs font-extrabold uppercase tracking-wider text-white">Eco-Galaxy Backsound Studio</h4>
+            <p id="bgm-status-badge" class="text-[10px] text-emerald-300 font-medium">Siap Memutar Audio Latar</p>
+          </div>
+        </div>
+        <button onclick="toggleBgmDrawer()" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-xs" title="Tutup Panel Backsound">
+          <i class="fa-solid fa-chevron-up"></i>
+        </button>
+      </div>
+
+      <!-- Active Track Info & Marquee -->
+      <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-3 flex items-center justify-between gap-3">
+        <div class="overflow-hidden">
+          <div class="text-[10px] uppercase tracking-wider text-slate-400 font-bold flex items-center gap-1.5">
+            <i class="fa-solid fa-compact-disc fa-spin text-sky-400"></i>
+            <span id="bgm-source-type">Synthesizer Internal</span>
+          </div>
+          <div id="bgm-track-title" class="text-xs font-bold text-white truncate mt-0.5">
+            1. Solarpunk Bioluminescence (Ambient Pad)
+          </div>
+        </div>
+        <div id="drawer-eq-container" class="flex items-end gap-0.5 h-4 shrink-0">
+          <span class="eq-bar"></span>
+          <span class="eq-bar"></span>
+          <span class="eq-bar"></span>
+          <span class="eq-bar"></span>
+        </div>
+      </div>
+
+      <!-- Playlist Selector Dropdown -->
+      <div class="flex flex-col gap-1">
+        <label class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Pilih Lagu / Kanal Backsound:</label>
+        <select id="bgm-track-select" onchange="selectBgmTrack(this.value)" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 font-medium focus:outline-none focus:border-emerald-400">
+          <!-- Populated dynamically via JS -->
+        </select>
+      </div>
+
+      <!-- Upload Local Audio from PC Button -->
+      <div class="flex items-center gap-2">
+        <button onclick="document.getElementById('bgm-file-input').click()" class="btn-amber w-full py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-md">
+          <i class="fa-solid fa-folder-open"></i>
+          <span>Upload MP3 / Audio dari PC Sendiri</span>
+        </button>
+      </div>
+
+      <!-- Playback Transport Controls -->
+      <div class="flex items-center justify-between gap-2 bg-slate-900/60 p-2 rounded-2xl border border-slate-800/80">
+        <div class="flex items-center gap-1.5">
+          <button onclick="prevBgmTrack()" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center text-xs transition" title="Lagu Sebelumnya">
+            <i class="fa-solid fa-backward-step"></i>
+          </button>
+          <button onclick="toggleBgmPlay()" id="drawer-bgm-play-btn" class="w-10 h-9 rounded-xl btn-eco flex items-center justify-center text-sm font-bold transition" title="Play / Pause">
+            <i id="drawer-bgm-play-icon" class="fa-solid fa-play"></i>
+          </button>
+          <button onclick="nextBgmTrack()" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center text-xs transition" title="Lagu Berikutnya">
+            <i class="fa-solid fa-forward-step"></i>
+          </button>
+        </div>
+
+        <!-- Loop Toggle -->
+        <button onclick="toggleBgmLoop()" id="bgm-loop-btn" class="px-2.5 py-1.5 rounded-xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[11px] font-bold flex items-center gap-1 transition" title="Ulangi Lagu (Loop)">
+          <i class="fa-solid fa-repeat"></i>
+          <span id="bgm-loop-label">Loop: ON</span>
+        </button>
+      </div>
+
+      <!-- Volume Slider & Auto-Ducking Option -->
+      <div class="flex flex-col gap-2 pt-1">
+        <div class="flex items-center justify-between text-[11px]">
+          <span class="text-slate-300 font-semibold flex items-center gap-1.5">
+            <i id="bgm-vol-icon" class="fa-solid fa-volume-low text-emerald-400"></i> Volume Backsound
+          </span>
+          <span id="bgm-vol-label" class="font-tech text-emerald-300 font-bold">35%</span>
+        </div>
+        <input type="range" id="bgm-volume-slider" class="eco-slider w-full" min="0" max="100" value="35" oninput="changeBgmVolume(this.value)">
+
+        <label class="flex items-center justify-between text-[11px] text-slate-300 bg-slate-900/50 px-3 py-1.5 rounded-xl border border-slate-800 cursor-pointer mt-1">
+          <span class="flex items-center gap-1.5">
+            <i class="fa-solid fa-wand-magic-sparkles text-sky-400"></i> Kecilkan otomatis saat Bot bicara
+          </span>
+          <input type="checkbox" id="bgm-autoduck-check" checked class="accent-emerald-400 w-3.5 h-3.5 rounded cursor-pointer">
+        </label>
+      </div>
+    </div>
+
+    <!-- MIDDLE AREA: 3D World Viewport + Main Holographic Quest Deck -->
+    <main class="w-full flex-1 flex flex-col lg:flex-row items-center lg:items-end justify-between gap-4 my-2 overflow-hidden">
+      
+      <!-- Left Floating 3D Companion Status & Camera Telemetry -->
+      <div class="hud-interactive hidden lg:flex flex-col gap-3 w-72 self-end mb-2">
+        <!-- Galaxy Bot Live Telemetry Card -->
+        <div class="eco-glass p-4 rounded-2xl border-l-4 border-l-emerald-400 animate-float">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400/30 to-sky-500/30 border border-emerald-300/50 flex items-center justify-center text-emerald-300 shadow-lg">
+              <i class="fa-solid fa-robot text-lg"></i>
+            </div>
+            <div>
+              <div class="text-[10px] font-bold uppercase tracking-wider text-emerald-400">AI Companion Drone</div>
+              <div id="left-bot-name" class="text-xs font-bold text-white leading-tight">Unit-X 01</div>
+            </div>
+          </div>
+          <p id="left-bot-status" class="text-[11px] text-slate-300 leading-relaxed mb-3">
+            Memindai kesiapan ekosistem belajar dan menyelaraskan jaringan saraf Adiwiyata...
+          </p>
+          <div class="flex items-center justify-between text-[11px] border-t border-slate-700/60 pt-2.5">
+            <span class="text-slate-400"><i class="fa-solid fa-location-crosshairs text-sky-400 mr-1"></i>Koordinat 3D:</span>
+            <span id="coords- text" class="font-tech text-emerald-300 font-semibold">SEC-01 // ALFA</span>
+          </div>
+        </div>
+
+        <!-- Quick Presenter Interactive Tools -->
+        <div class="eco-glass p-3.5 rounded-2xl flex flex-col gap-2">
+          <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+            <span><i class="fa-solid fa-wand-magic-sparkles text-amber-300 mr-1"></i>Perangkat Pemateri Live</span>
+            <span class="text-emerald-400">Interaktif</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="openPresenterChallenge()" class="btn-amber py-2 px-2.5 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-bolt"></i> Tantangan Kelas
+            </button>
+            <button onclick="triggerCelebrationBurst()" class="btn-eco py-2 px-2.5 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-fireworks"></i> Efek Apresiasi
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT / CENTER: MAIN HOLOGRAPHIC QUEST DIALOG PANEL -->
+      <section id="quest-panel" class="hud-interactive eco-glass w-full lg:w-[820px] xl:w-[920px] max-h-[72vh] lg:max-h-[75vh] rounded-3xl flex flex-col overflow-hidden quest-transition">
+        
+        <!-- Panel Header -->
+        <div class="px-5 py-3.5 bg-slate-900/60 border-b border-emerald-500/20 flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-3">
+            <span id="scene-step-pill" class="font-tech font-bold text-xs px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
+              ADEGAN 01 / 16
+            </span>
+            <div>
+              <h1 id="scene-title" class="text-base sm:text-xl font-extrabold text-white tracking-tight">
+                Adegan 1: Pembuka & Pemantik Sistem
+              </h1>
+              <p id="scene-subtitle" class="text-xs text-slate-400 font-medium flex items-center gap-2">
+                <span><i class="fa-regular fa-clone text-sky-400 mr-1"></i>Slide 1–2</span>
+                <span>•</span>
+                <span id="scene-bot-badge" class="text-amber-300 font-semibold"><i class="fa-solid fa-robot mr-1"></i>Robot Galaxy: "Unit-X 01 (Pemancar Kesadaran)"</span>
+              </p>
+            </div>
+          </div>
+
+          <!-- Duration / Mode Badge + Voice TTS Button + Slide 16 Close Button -->
+          <div class="flex items-center gap-2">
+            <!-- Slide 16 Close / Return to Intro Button (Dynamically shown on Adegan 16) -->
+            <button onclick="returnToIntro()" id="btn-return-intro" class="hidden px-4 py-2 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 border-2 border-rose-400 text-white text-xs sm:text-sm font-extrabold items-center gap-2 shadow-2xl transition animate-pulse" title="Tutup / Kembali ke Halaman Intro (Opera)">
+              <i class="fa-solid fa-power-off text-base text-amber-200"></i>
+              <span>Tutup ke Intro</span>
+            </button>
+
+            <button onclick="speakCurrentNarration()" id="tts-btn" class="px-3 py-1.5 rounded-full bg-sky-500/20 hover:bg-sky-500/35 border border-sky-400/40 text-sky-200 text-xs font-bold flex items-center gap-1.5 transition" title="Suarakan Narasi Fasilitator (AI Voice)">
+              <i id="tts-icon" class="fa-solid fa-volume-low"></i>
+              <span id="tts-label">Suara Bot</span>
+            </button>
+            <div id="scene-duration-badge" class="px-3.5 py-1.5 rounded-full bg-amber-500/15 border border-amber-400/40 text-amber-300 text-xs font-bold flex items-center gap-1.5">
+              <i class="fa-regular fa-clock"></i>
+              <span>10 Menit</span>
+            </div>
+            <!-- Minimize Main Quest Panel Button -->
+            <button onclick="toggleQuestBody()" id="btn-minimize-quest" class="w-8 h-8 rounded-full bg-slate-800/90 hover:bg-emerald-500/30 border border-slate-600/60 hover:border-emerald-400/60 text-slate-300 hover:text-emerald-200 flex items-center justify-center transition" title="Kecilkan / Maksimalkan Panel Materi">
+              <i id="icon-minimize-quest" class="fa-solid fa-window-minimize text-xs -translate-y-1"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Panel Body (Scrollable if needed on smaller screens) -->
+        <div id="quest-panel-body" class="p-5 overflow-y-auto custom-scroll grid grid-cols-1 md:grid-cols-12 gap-4 items-stretch transition-all duration-300">
+          
+          <!-- Left Column (5 cols): Visual Hologram & Special Interactive Portal -->
+          <div id="hologram-visual-col" class="md:col-span-5 flex flex-col justify-between rounded-2xl bg-slate-950/70 border border-slate-800/80 overflow-hidden relative group min-h-[240px] transition-all duration-300">
+            <!-- Scene Background Image with Soft Filter -->
+            <img id="scene-image" src="https://images.stockcake.com/public/6/1/b/61ba8e5f-149b-4395-8eec-41e9882f0c79_large/futuristic-digital-learning-stockcake.jpg" alt="Visual Scene" class="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-105 group-hover:opacity-50 transition duration-700" onerror="this.src='https://placehold.co/600x400/0f2922/34d399?text=Eco+Galaxy+3D'">
+            <div id="hologram-gradient-overlay" class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent"></div>
+
+            <!-- Top Visual Tag & Minimize / Zoom Controls -->
+            <div class="relative z-10 p-3 flex flex-wrap justify-between items-center gap-1.5 bg-slate-950/50 backdrop-blur-md border-b border-slate-800/60">
+              <span class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-900/90 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                <i class="fa-solid fa-vr-cardboard"></i>
+                <span>Hologram Visual</span>
+              </span>
+
+              <div class="flex items-center gap-1.5">
+                <!-- Zoom Out 3D Camera -->
+                <button onclick="zoomOutCameraFromCrystal()" class="text-[11px] text-slate-300 hover:text-white bg-slate-900/90 hover:bg-slate-800 px-2 py-1 rounded-lg border border-slate-700/80 transition" title="Perkecil / Jauhkan Kamera 3D">
+                  <i class="fa-solid fa-magnifying-glass-minus"></i>
+                </button>
+                <!-- Zoom In 3D Camera -->
+                <button onclick="focusCameraOnCrystal()" class="text-[11px] text-sky-300 hover:text-white bg-slate-900/90 hover:bg-sky-900/50 px-2 py-1 rounded-lg border border-sky-500/30 transition" title="Perbesar / Zoom Kamera ke Monumen 3D">
+                  <i class="fa-solid fa-magnifying-glass-plus"></i>
+                </button>
+                <!-- Expand Full Width Visual Button -->
+                <button onclick="toggleExpandVisualHologram()" id="btn-expand-hologram" class="text-[11px] text-amber-300 hover:text-white bg-slate-900/90 hover:bg-amber-900/40 px-2 py-1 rounded-lg border border-amber-500/30 transition" title="Lebarkan Ukuran Hologram Visual">
+                  <i id="icon-expand-hologram" class="fa-solid fa-up-right-and-down-left-from-center"></i>
+                </button>
+                <!-- Minimize / Collapse Hologram Visual Button -->
+                <button onclick="toggleMinimizeVisualHologram()" id="btn-minimize-hologram" class="text-[11px] font-semibold text-emerald-300 hover:text-white bg-emerald-950/90 hover:bg-emerald-800/70 px-2.5 py-1 rounded-lg border border-emerald-500/40 transition flex items-center gap-1" title="Kecilkan / Sembunyikan Kartu Hologram Visual">
+                  <i id="icon-minimize-hologram" class="fa-solid fa-compress"></i>
+                  <span id="label-minimize-hologram">Kecilkan</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Minimized Compact Bar (Only shown when Hologram Visual is minimized) -->
+            <div id="hologram-minimized-bar" class="hidden relative z-10 px-3.5 py-2.5 items-center justify-between gap-2 bg-slate-900/85">
+              <div class="flex items-center gap-2.5 overflow-hidden">
+                <div class="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 shrink-0">
+                  <i id="scene-visual-icon-mini" class="fa-solid fa-network-wired text-xs"></i>
+                </div>
+                <span id="scene-visual-title-mini" class="text-xs font-bold text-white truncate">Cyber Neural Tech UI</span>
+              </div>
+              <span class="text-[10px] text-slate-400 shrink-0 italic">Mode Ringkas Aktif</span>
+            </div>
+
+            <!-- Bottom Visual Info & Dynamic Action Portal -->
+            <div id="hologram-content-body" class="relative z-10 p-4 mt-auto transition-all duration-300">
+              <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 mb-2.5 shadow-lg">
+                <i id="scene-visual-icon" class="fa-solid fa-network-wired text-lg"></i>
+              </div>
+              <h3 id="scene-visual-title" class="text-base font-bold text-white mb-1">Cyber Neural Tech UI</h3>
+              <p id="scene-visual-desc" class="text-xs text-slate-300 leading-relaxed">
+                Visual kolaborasi neural network AI dan kesadaran lingkungan ekologis sekolah.
+              </p>
+
+              <!-- Dynamic Action Portal Container (Links, Embeds, Celebrations) -->
+              <div id="scene-action-portal" class="mt-3.5 pt-3 border-t border-slate-800/80 hidden">
+                <!-- Populated dynamically via JS -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column (7 cols): Narasi, Aktivitas, & Hasil Diharapkan -->
+          <div id="detail-cards-col" class="md:col-span-7 flex flex-col gap-3 justify-between transition-all duration-300">
+            
+            <!-- Card 1: Narasi Fasilitator -->
+            <div class="eco-glass-subtle p-3.5 rounded-2xl border-l-4 border-l-emerald-400 hover:border-emerald-400/60 transition">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider text-emerald-300 flex items-center gap-1.5">
+                  <i class="fa-solid fa-microphone-lines"></i> <span id="narasi-label">Narasi Fasilitator</span>
+                </span>
+                <span class="text-[10px] text-slate-400">Dialog Utama</span>
+              </div>
+              <div id="scene-narasi" class="text-xs sm:text-sm text-slate-100 leading-relaxed font-medium">
+                "Bagaimana kita merancang pembelajaran di setiap mata pelajaran agar tidak hanya mendalam secara materi, tetapi juga menanamkan kesadaran lingkungan dan pengalaman digital yang bermakna?"
+              </div>
+            </div>
+
+            <!-- Card 2: Aktivitas Peserta / Fasilitator -->
+            <div class="eco-glass-subtle p-3.5 rounded-2xl border-l-4 border-l-amber-400 hover:border-amber-400/60 transition">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
+                  <i class="fa-solid fa-users-gear"></i> <span id="aktivitas-label">Aktivitas Peserta</span>
+                </span>
+                <span class="text-[10px] text-slate-400">Misi Kolaborasi</span>
+              </div>
+              <div id="scene-aktivitas" class="text-xs sm:text-sm text-slate-200 leading-relaxed">
+                Menjawab pertanyaan pemantik: "Apa tantangan terbesar dalam mengintegrasikan isu lingkungan ke dalam mata pelajaran Anda secara menarik?"
+              </div>
+            </div>
+
+            <!-- Card 3: Hasil Diharapkan / Output -->
+            <div class="eco-glass-subtle p-3.5 rounded-2xl border-l-4 border-l-sky-400 hover:border-sky-400/60 transition">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider text-sky-300 flex items-center gap-1.5">
+                  <i class="fa-solid fa-square-check"></i> <span id="output-label">Hasil Diharapkan</span>
+                </span>
+                <span class="text-[10px] text-slate-400">Target Pencapaian</span>
+              </div>
+              <div id="scene-output" class="text-xs sm:text-sm text-slate-200 leading-relaxed">
+                Peserta lintas mapel memahami tujuan dan relevansi pelatihan secara utuh.
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Panel Footer: Navigation & Interactive Trigger -->
+        <div class="px-5 py-3 bg-slate-950/80 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-2">
+            <button onclick="prevScene()" id="btn-prev" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600/60 text-xs font-bold text-slate-200 flex items-center gap-2 transition disabled:opacity-40">
+              <i class="fa-solid fa-arrow-left"></i> Sebelumnya
+            </button>
+            <button onclick="nextScene()" id="btn-next" class="px-5 py-2 rounded-xl btn-eco text-xs font-bold flex items-center gap-2 pulse-emerald">
+              <span>Terbang ke Stasiun Berikutnya</span> <i class="fa-solid fa-shuttle-space"></i>
+            </button>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="openPresenterChallenge()" class="px-3.5 py-2 rounded-xl btn-amber text-xs font-bold flex items-center gap-1.5">
+              <i class="fa-solid fa-comments"></i> Diskusi & Simulasi Kelas
+            </button>
+          </div>
+        </div>
+
+      </section>
+    </main>
+
+    <!-- BOTTOM BAR: 16-Waypoint Constellation Trail & Creator Attribution -->
+    <footer class="hud-interactive w-full flex flex-col gap-2">
+      <div class="eco-glass px-4 py-2.5 rounded-2xl flex items-center justify-between gap-4 overflow-x-auto custom-scroll">
+        
+        <div class="flex items-center gap-2 shrink-0">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-300 flex items-center gap-1.5">
+            <i class="fa-solid fa-route"></i> Jalur Ekspedisi:
+          </span>
+        </div>
+
+        <!-- 16 Waypoint Nodes -->
+        <div id="waypoint-trail" class="flex items-center gap-1.5 sm:gap-2 mx-auto">
+          <!-- Populated dynamically via JS -->
+        </div>
+
+        <!-- Creator Attribution Badge -->
+        <div class="shrink-0 hidden md:flex items-center gap-2 text-[11px] text-slate-400 border-l border-slate-700/70 pl-3">
+          <i class="fa-solid fa-code-branch text-emerald-400"></i>
+          <span>Kreator : <strong class="text-slate-200">Fahrudin, S.Pd.I</strong> - SMKN 30 JAKARTA</span>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- MODAL 1: GOOGLE DOC EMBED PREVIEW (ADEGAN 8) -->
+  <div id="doc-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="eco-glass w-full max-w-5xl h-[85vh] rounded-3xl flex flex-col overflow-hidden border border-emerald-400/40">
+      <div class="px-6 py-4 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <i class="fa-solid fa-file-word text-sky-400 text-xl"></i>
+          <div>
+            <h3 class="text-base font-bold text-white">Pratinjau Langsung: Kerangka Pembuatan MPI</h3>
+            <p class="text-xs text-slate-400">Adegan 8 • Dokumen Panduan Terintegrasi</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <a href="https://docs.google.com/document/d/1FZzARNooQW2L_Cfo9I1RtkVQwG8XvwB7/edit?usp=drive_link&ouid=104295154711659895504&rtpof=true&sd=true" target="_blank" class="btn-amber px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
+            <i class="fa-solid fa-cloud-arrow-down"></i> Download Templat Dokumen
+          </a>
+          <button onclick="closeDocModal()" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-rose-500/30 text-slate-300 hover:text-rose-200 flex items-center justify-center transition">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+      </div>
+      <div class="flex-1 bg-slate-950 p-2">
+        <iframe src="https://docs.google.com/document/d/e/2PACX-1vT3UCjwBJdeWMQfagfTUegssXNOGuDSvhhnTI3RWDCN1YYxdC78maPJHFSBfcNzBA/pub?embedded=true" class="w-full h-full rounded-2xl border border-slate-800 bg-white"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: 16-STATION CONSTELLATION MATRIX OVERVIEW -->
+  <div id="overview-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="eco-glass w-full max-w-5xl max-h-[85vh] rounded-3xl flex flex-col overflow-hidden border border-emerald-400/40">
+      <div class="px-6 py-4 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between">
+        <div>
+          <h3 class="text-lg font-extrabold text-white flex items-center gap-2">
+            <i class="fa-solid fa-map-location-dot text-emerald-400"></i> Peta Bintang 16 Adegan Pelatihan Adiwiyata & AI
+          </h3>
+          <p class="text-xs text-slate-400">Klik salah satu stasiun untuk melakukan teleportasi kamera 3D langsung ke adegan tersebut.</p>
+        </div>
+        <button onclick="toggleOverviewModal()" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <div id="overview-grid" class="p-6 overflow-y-auto custom-scroll grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: INTERACTIVE CLASS CHALLENGE & DISCUSSION PROMPT -->
+  <div id="challenge-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="eco-glass w-full max-w-2xl rounded-3xl flex flex-col overflow-hidden border border-amber-400/40">
+      <div class="px-6 py-4 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300">
+            <i class="fa-solid fa-bolt"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white">Simulasi & Pemantik Interaktif Audiens</h3>
+            <p id="challenge-scene-name" class="text-xs text-amber-300 font-medium">Adegan Aktif</p>
+          </div>
+        </div>
+        <button onclick="closePresenterChallenge()" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-6 flex flex-col gap-4">
+        <div class="p-4 rounded-2xl bg-slate-900/90 border border-emerald-500/30">
+          <div class="text-xs font-bold uppercase text-emerald-400 mb-1">Pertanyaan Pemantik / Tantangan Diskusi Guru:</div>
+          <p id="challenge-prompt-text" class="text-sm sm:text-base font-semibold text-white leading-relaxed">
+            "Bagaimana bapak/ibu mengaitkan materi pelajaran hari ini dengan satu aksi nyata penyelamatan lingkungan di sekolah?"
+          </p>
+        </div>
+
+        <!-- Random Teacher/Subject Picker Wheel -->
+        <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <div class="text-xs font-bold text-sky-300"><i class="fa-solid fa-dice mr-1"></i>Pemilih Acak Rumpun Mata Pelajaran</div>
+            <p class="text-xs text-slate-400">Gunakan fitur ini untuk menunjuk perwakilan guru secara interaktif & seru!</p>
+          </div>
+          <button onclick="spinSubjectWheel()" class="btn-eco px-4 py-2.5 rounded-xl text-xs font-bold shrink-0 flex items-center gap-2">
+            <i class="fa-solid fa-rotate"></i> Putar Rumpun Mapel
+          </button>
+        </div>
+
+        <div id="wheel-result" class="hidden p-4 rounded-2xl bg-gradient-to-r from-emerald-500/20 via-sky-500/20 to-amber-500/20 border border-emerald-400/50 text-center">
+          <div class="text-[11px] uppercase tracking-wider text-emerald-300 font-bold">Terpilih untuk Berbagi Ide:</div>
+          <div id="wheel-winner-text" class="text-lg font-extrabold text-white mt-0.5">Guru Rumpun Sains & Teknologi</div>
+        </div>
+      </div>
+
+      <div class="px-6 py-3.5 bg-slate-950/90 border-t border-slate-800 flex justify-between items-center">
+        <span class="text-xs text-slate-400">Tekan tombol Apresiasi jika peserta selesai menjawab!</span>
+        <button onclick="triggerCelebrationBurst(); closePresenterChallenge();" class="btn-amber px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5">
+          <i class="fa-solid fa-award"></i> Beri Apresiasi 3D (+XP)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPLICATION & 3D WORLD LOGIC -->
+  <script>
+    // =========================================================================
+    // 1. COMPLETE 16 SCENES DATA FROM STORYBOARD PELATIHAN ADIWIYATA & AI
+    // =========================================================================
+    const SCENES = [
+      {
+        id: 1,
+        title: "Adegan 1: Pembuka & Pemantik Sistem",
+        subtitle: "Slide 1–2",
+        duration: "10 Menit",
+        botName: 'Unit-X 01 (Pemancar Kesadaran)',
+        botStatus: "Menginisiasi jaring saraf ekologis & menyelaraskan frekuensi belajar guru lintas mapel.",
+        visualIcon: "fa-network-wired",
+        visualTitle: "Cyber Neural Tech UI",
+        visualDesc: "Visual kolaborasi neural network AI dan kesadaran lingkungan ekologis sekolah.",
+        image: "https://images.stockcake.com/public/6/1/b/61ba8e5f-149b-4395-8eec-41e9882f0c79_large/futuristic-digital-learning-stockcake.jpg",
+        narasiLabel: "Narasi Fasilitator",
+        narasi: '"Bagaimana kita merancang pembelajaran di setiap mata pelajaran agar tidak hanya mendalam secara materi, tetapi juga menanamkan kesadaran lingkungan dan pengalaman digital yang bermakna?"',
+        aktivitasLabel: "Aktivitas Peserta",
+        aktivitas: 'Menjawab pertanyaan pemantik: "Apa tantangan terbesar dalam mengintegrasikan isu lingkungan ke dalam mata pelajaran Anda secara menarik?"',
+        outputLabel: "Hasil Diharapkan",
+        output: "Peserta lintas mapel memahami tujuan dan relevansi pelatihan secara utuh.",
+        challengePrompt: "Sebutkan 1 tantangan paling nyata saat menyisipkan pesan peduli lingkungan di mata pelajaran Anda, dan bagaimana teknologi bisa membantu!",
+        color: 0x34d399
+      },
+      {
+        id: 2,
+        title: "Adegan 2: Konsep Modul Berkarakter Adiwiyata",
+        subtitle: "Slide 3–4",
+        duration: "20 Menit",
+        botName: 'Unit-X 02 (Eco Matrix Navigator)',
+        botStatus: "Memetakan matriks Capaian Pembelajaran (CP) terhadap isu kelestarian ekologis.",
+        visualIcon: "fa-seedling",
+        visualTitle: "Matriks Integrasi Ekologis",
+        visualDesc: "Menghubungkan Capaian Pembelajaran, nilai kelestarian lingkungan, aktivitas siswa, dan asesmen.",
+        image: "https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcSKgLXTB6WkXrdtYMcUIoiqJ9XOadVXrwr6V1FaxJa5Xo6oONoaAbjDrpuJWMWs",
+        narasiLabel: "Narasi Fasilitator",
+        narasi: '"Pendidikan lingkungan hidup bukan hanya milik guru IPA atau mulok, melainkan dapat diintegrasikan ke dalam seluruh mata pelajaran melalui studi kasus nyata."',
+        aktivitasLabel: "Aktivitas Peserta",
+        aktivitas: "Peserta dari berbagai latar belakang mapel mengidentifikasi isu lingkungan yang relevan dengan bidang studi masing-masing.",
+        outputLabel: "Hasil Diharapkan",
+        output: "Terbentuknya peta integrasi materi mata pelajaran dengan karakter Adiwiyata.",
+        challengePrompt: "Pilih satu topik di mata pelajaran Anda minggu depan: Isu Adiwiyata apa (sampah, energi, air, biodiversitas) yang paling pas dikaitkan?",
+        color: 0x38bdf8
+      },
+      {
+        id: 3,
+        title: "Adegan 3: Praktik Menyusun Modul Ajar",
+        subtitle: "Slide 5",
+        duration: "40 Menit",
+        botName: 'Unit-X 03 (AI Architect Bot)',
+        botStatus: "Merakit arsitektur modul: Tujuan ➞ Materi ➞ Aktivitas ➞ Media ➞ Asesmen.",
+        visualIcon: "fa-wand-magic-sparkles",
+        visualTitle: "Workflow Generator AI",
+        visualDesc: "Tujuan ➞ Materi ➞ Aktivitas ➞ Media ➞ Asesmen dengan verifikasi profesional guru.",
+        image: "https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcT4wi37bdT8vQtD710k3vLyUE2Capw9oIpcvaSb8_dHtKuNCCKGkbCNRn8-jeq_",
+        narasiLabel: "Narasi Fasilitator",
+        narasi: '"Gunakan AI sebagai mitra perancang, bukan sebagai pengganti pertimbangan profesional guru. Sesuaikan output dengan karakteristik dan kebutuhan peserta didik."',
+        aktivitasLabel: "Aktivitas Peserta",
+        aktivitas: "Menyusun rancangan modul ajar sesuai bidang studi masing-masing dengan integrasi isu Adiwiyata.",
+        outputLabel: "Hasil Diharapkan",
+        output: "Draf modul ajar lintas mapel yang memiliki tujuan, kegiatan, dan asesmen selaras.",
+        challengePrompt: "Bagaimana cara kita memastikan hasil modul dari AI tetap berpusat pada murid dan sesuai konteks nyata sekolah kita?",
+        color: 0xfbbf24
+      },
+      {
+        id: 4,
+        title: "Adegan 4: Akses Web Generator Modul Ajar",
+        subtitle: "Slide Interaktif Langsung",
+        duration: "Live Access",
+        botName: 'Unit-X 04 (Hyperlink Portal)',
+        botStatus: "Membuka gerbang portal menuju Web Generator Modul Ajar Berbasis AI.",
+        visualIcon: "fa-arrow-pointer",
+        visualTitle: "Platform Generator AI",
+        visualDesc: "Pusat aplikasi pembuat RPP/modul ajar instan berbasis kecerdasan buatan.",
+        image: "https://images.stockcake.com/public/6/f/9/6f931a0c-d5e6-4e42-8628-5bb515d36b73_medium/ai-trading-intelligence-stockcake.jpg",
+        narasiLabel: "Narasi Fasilitator",
+        narasi: '"Silakan akses tautan generator di bawah ini untuk memulai praktik pembuatan draf modul ajar secara digital dan cepat."',
+        aktivitasLabel: "Portal Akses Langsung",
+        aktivitas: "Membuka platform Web Generator Modul Ajar dan menginput parameter Capaian Pembelajaran serta tema Adiwiyata.",
+        outputLabel: "Hasil Diharapkan",
+        output: "Peserta berhasil membuka platform dan bersiap melakukan input parameter modul ajar.",
+        actionType: "link",
+        actionLabel: "Buka Generator Modul Ajar AI",
+        actionUrl: "https://fahrudin67-prog.github.io/Generator-Modul-Ajar/",
+        challengePrompt: "Silakan uji coba masukkan 1 topik ajar Anda ke Generator Modul Ajar, lalu amati kecepatan sintesisnya!",
+        color: 0x34d399
+      },
+      {
+        id: 5,
+        title: "Adegan 5: Apresiasi & Pencapaian Modul",
+        subtitle: "Milestone Pencapaian",
+        duration: "Milestone Success",
+        botName: 'Unit-X 05 (Achievement Notifier)',
+        botStatus: "Mendeteksi keberhasilan penyusunan draf modul ajar berkarakter Adiwiyata!",
+        visualIcon: "fa-trophy",
+        visualTitle: "Modul Ajar Berhasil Dibuat",
+        visualDesc: "Pencapaian luar biasa dalam merancang pembelajaran berbasis teknologi dan lingkungan.",
+        image: "https://images.stockcake.com/public/6/1/b/61ba8e5f-149b-4395-8eec-41e9882f0c79_large/futuristic-digital-learning-stockcake.jpg",
+        narasiLabel: "Narasi Fasilitator",
+        narasi: '"Selamat anda baru saja berhasil membuat modul berkarakter adiwiyata!"',
+        aktivitasLabel: "Aktivitas Peserta",
+        aktivitas: "Saling memberikan apresiasi antarpeserta atas draf modul ajar inovatif yang telah sukses di-generate.",
+        outputLabel: "Hasil Diharapkan",
+        output: "Meningkatnya rasa percaya diri peserta dalam mengintegrasikan AI dan Adiwiyata ke ruang kelas.",
+        actionType: "celebrate",
+        actionLabel: "Rayakan Pencapaian Modul (+XP)",
+        challengePrompt: "Berikan apresiasi kepada rekan di sebelah Anda dan ceritakan bagian paling menarik dari modul yang baru saja Anda buat!",
+        color: 0xfbbf24
+      },
+      {
+        id: 6,
+        title: "Adegan 6: Media Pembelajaran Interaktif (MPI)",
+        subtitle: "Sesi Inti Interaktif",
+        duration: "Interactive Core",
+        botName: 'Unit-X 06 (Interactive Core Bot)',
+        botStatus: "Mengaktifkan arsitektur navigasi dua arah, simulasi visual, dan umpan balik instan.",
+        visualIcon: "fa-cube",
+        visualTitle: "Ekosistem MPI Digital",
+        visualDesc: "Transisi dari materi pasif menuju navigasi aktif, simulasi visual, dan keterlibatan sensorik peserta didik.",
+        image: "https://images.stockcake.com/public/6/f/9/6f931a0c-d5e6-4e42-8628-5bb515d36b73_medium/ai-trading-intelligence-stockcake.jpg",
+        narasiLabel: "Narasi Fasilitator",
+        narasi: '"Media Pembelajaran Interaktif (MPI) bukan sekadar slide presentasi yang indah, melainkan sistem jembatan digital di mana siswa dapat beraksi, memilih jalur eksplorasi, memecahkan masalah kontekstual, dan menerima umpan balik seketika."',
+        aktivitasLabel: "Aktivitas Peserta",
+        aktivitas: "Peserta menganalisis komponen utama MPI (navigasi, stimulus visual interaktif, tantangan kognitif, dan mekanisme feedback) yang sesuai dengan materi Adiwiyata masing-masing.",
+        outputLabel: "Hasil Diharapkan",
+        output: "Peserta memahami kerangka kerja perancangan Media Pembelajaran Interaktif yang siap dikembangkan.",
+        challengePrompt: "Apa perbedaan paling mendasar antara slide presentasi biasa dengan Media Pembelajaran Interaktif (MPI) menurut pengalaman mengajar Anda?",
+        color: 0x38bdf8
+      },
+      {
+        id: 7,
+        title: "Adegan 7: Mengenal Materi Berbasis AI",
+        subtitle: "Sesi AI Material",
+        duration: "20 Menit",
+        botName: 'Unit-X 07 (Data Synthesizer)',
+        botStatus: "Mensintesis prompt menjadi teks pembelajaran kontekstual, ilustrasi ekologis, dan kuis.",
+        visualIcon: "fa-brain",
+        visualTitle: "Sintesis Materi Digital",
+        visualDesc: "Prompt → Teks Pembelajaran → Ilustrasi → Kuis interaktif berbasis AI.",
+        image: "https://images.stockcake.com/public/b/e/8/be81c6db-630d-45fc-8ea7-a3674d812e95_large/glowing-digital-network-stockcake.jpg",
+        narasiLabel: "Narasi Fasilitator",
+        narasi: '"AI membantu mempercepat pembuatan bahan ajar, tetapi guru tetap bertanggung jawab atas kebenaran konsep, kesesuaian tingkat bahasa, dan keamanan data."',
+        aktivitasLabel: "Aktivitas Fasilitator",
+        aktivitas: "Mendemonstrasikan pembuatan materi singkat, ilustrasi pendukung, dan soal evaluasi berbasis AI.",
+        outputLabel: "Hasil Diharapkan",
+        output: "Peserta memahami proses produksi bahan ajar digital dengan bantuan AI.",
+        challengePrompt: "Sebutkan 3 hal yang wajib diverifikasi oleh guru sebelum bahan ajar hasil AI diberikan kepada siswa!",
+        color: 0x34d399
+      },
+      {
+        id: 8,
+        title: "Adegan 8: Kerangka Pembuatan MPI & Dokumen Unduhan",
+        subtitle: "Sesi Pratinjau & Unduh Template",
+        duration: "Template & Embed",
+        botName: 'Unit-X 08 (Template Curator)',
+        botStatus: "Menyediakan cetak biru dokumen kerangka kerja Media Pembelajaran Interaktif.",
+        visualIcon: "fa-file-lines",
+        visualTitle: "Pratinjau & Unduh Kerangka MPI",
+        visualDesc: "Dokumen panduan terstruktur untuk merancang skenario dan komponen interaktif MPI.",
+        image: "https://images.stockcake.com/public/6/1/b/61ba8e5f-149b-4395-8eec-41e9882f0c79_large/futuristic-digital-learning-stockcake.jpg",
+        narasiLabel: "Narasi Fasilitator",
+        narasi: '"Gunakan kerangka panduan ini untuk menyusun struktur Media Pembelajaran Interaktif Anda. Silakan buka pratinjau langsung atau unduh format dokumen kerangka kerja melalui tombol yang tersedia."',
+        aktivitasLabel: "Aktivitas Peserta",
+        aktivitas: "Mengunduh format dokumen Kerangka MPI dan mulai memetakan materi Adiwiyata ke dalam struktur layar interaktif.",
+        outputLabel: "Hasil Diharapkan",
+        output: "Peserta memiliki lembar kerja kerangka MPI yang siap disesuaikan dengan materi pembelajaran masing-masing.",
+        actionType: "doc_embed",
+        actionUrl: "https://docs.google.com/document/d/1FZzARNooQW2L_Cfo9I1RtkVQwG8XvwB7/edit?usp=drive_link&ouid=104295154711659895504&rtpof=true&sd=true",
+        challengePrompt: "Klik tombol 'Pratinjau Dokumen' atau 'Unduh Templat', lalu tentukan judul besar MPI yang akan kelompok Anda rancang!",
+        color: 0xfbbf24
+      },
+      {
+        id: 9,
+        title: "Adegan 9: Contoh Media Pembelajaran Interaktif (MPI)",
+        subtitle: "Showcase Game & Simulasi Digital",
+        duration: "Live Demo Link",
+        botName: 'Unit-X 09 (Game Master Bot)',
+        botStatus: "Menjalankan mesin simulasi gamifikasi Ashobah Game sebagai referensi nyata MPI.",
+        visualIcon: "fa-gamepad",
+        visualTitle: "Akses Game & Simulasi MPI",
+        visualDesc: "Jelajahi contoh media pembelajaran interaktif secara penuh untuk merasakan pengalaman bermain & belajar.",
+        image: "https://images.stockcake.com/public/6/f/9/6f931a0c-d5e6-4e42-8628-5bb515d36b73_medium/ai-trading-intelligence-stockcake.jpg",
+        narasiLabel: "Narasi Fasilitator",
+        narasi: '"Contoh nyata ini adalah platform Media Pembelajaran Interaktif (MPI) berbasis gamifikasi yang dirancang untuk memudahkan pemahaman konsep kompleks secara menyenangkan."',
+        aktivitasLabel: "Aktivitas Peserta",
+        aktivitas: "Peserta membuka tautan game di perangkat masing-masing, mencoba simulasi, dan mengeksplorasi elemen interaktifnya.",
+        outputLabel: "Hasil Inspirasi",
+        output: "Peserta memperoleh gambaran nyata standar pembuatan game edukasi dan media interaktif berstandar digital.",
+        actionType: "link",
+        actionLabel: "Buka Game Ashobah (MPI)",
+        actionUrl: "https://fahrudin67-prog.github.io/Ashobah-game/",
+        challengePrompt: "Setelah mencoba Game Ashobah, elemen interaktif apa yang paling membuat siswa betah belajar menurut Anda?",
+        color: 0x38bdf8
+      },
+      {
+        id: 10,
+        title: "Adegan 10: Apresiasi Pencapaian MPI",
+        subtitle: "Milestone Spesial",
+        duration: "Success Milestone",
+        botName: 'Unit-X 10 (Success Celebrator)',
+        botStatus: "Merayakan keberhasilan perancangan kerangka Media Pembelajaran Interaktif!",
+        visualIcon: "fa-circle-check",
+        visualTitle: "Media Interaktif Dirancang",
+        visualDesc: "Langkah luar biasa dalam mentransformasikan pembelajaran menjadi digital dan interaktif.",
+        image: "https://images.stockcake.com/public/6/1/b/61ba8e5f-149b-4395-8eec-41e9882f0c79_large/futuristic-digital-learning-stockcake.jpg",
+        narasiLabel: "Narasi Fasilitator",
+        narasi: '"Selamat anda baru saja berhasil merancang Media Pembelajaran Interaktif (MPI) berkarakter adiwiyata!"',
+        aktivitasLabel: "Aktivitas Peserta",
+        aktivitas: "Saling memberikan selamat dan apresiasi atas kerja keras dalam menyusun kerangka media pembelajaran digital yang inovatif.",
+        outputLabel: "Hasil Diharapkan",
+        output: "Peserta merasa bangga dan siap melanjutkan ke tahap penyusunan storyboard detail berikutnya.",
+        actionType: "celebrate",
+        actionLabel: "Rayakan Pencapaian MPI (+XP)",
+        challengePrompt: "Bagikan 1 fitur paling seru yang Anda masukkan ke dalam rancangan MPI Anda hari ini!",
+        color: 0x34d399
+      },
+      {
+        id: 11,
+        title: "Adegan 11: Studi Kasus & Contoh Storyboard (Canva Viewer)",
+        subtitle: "Sesi Akses Langsung Canva & Analisis Pakar",
+        duration: "Canva Direct Review",
+        botName: 'Unit-X 11 (Visual Muse Bot)',
+        botStatus: "Menganalisis estetika visual, konsistensi warna Adiwiyata, dan tata letak navigasi.",
+        visualIcon: "fa-pen-nib",
+        visualTitle: "Akses Templat Storyboard Canva",
+        visualDesc: "Buka desain secara optimal di tab baru untuk melihat struktur tata letak secara langsung.",
+        image: "https://images.stockcake.com/public/b/e/8/be81c6db-630d-45fc-8ea7-a3674d812e95_large/glowing-digital-network-stockcake.jpg",
+        narasiLabel: "Saran & Tips Tech Expert",
+        narasi: '• Konsistensi Visual: Pastikan pemilihan warna dan font selaras dengan identitas Adiwiyata. • Struktur Interaksi: Tentukan area tombol navigasi yang jelas bagi siswa. • Kejelasan Pesan: Hindari teks yang terlalu padat dalam satu layar visual.',
+        aktivitasLabel: "Aktivitas Peserta",
+        aktivitas: "Mencermati tata letak pada contoh Canva dan mendiskusikan alur skenario interaktif.",
+        outputLabel: "Hasil Analisis",
+        output: "Peserta mendapatkan inspirasi desain visual dan mampu mengaplikasikannya.",
+        actionType: "link",
+        actionLabel: "Buka Desain Storyboard di Canva",
+        actionUrl: "https://canva.link/l79a2xg1iptz9r5",
+        challengePrompt: "Amati contoh Storyboard di Canva: Mengapa tata letak tombol yang konsisten sangat penting bagi kenyamanan mata siswa?",
+        color: 0xfbbf24
+      },
+      {
+        id: 12,
+        title: "Adegan 12: Memahami Storyboard",
+        subtitle: "Sesi Blueprint",
+        duration: "15 Menit",
+        botName: 'Unit-X 12 (Layout Inspector)',
+        botStatus: "Memverifikasi kelengkapan 6 panel cetak biru: Pembukaan, Materi, Simulasi, Kuis, Feedback, Refleksi.",
+        visualIcon: "fa-cubes",
+        visualTitle: "Cetak Biru 6 Panel",
+        visualDesc: "Pembukaan, penyajian materi, simulasi, kuis, umpan balik, dan refleksi terstruktur.",
+        image: "https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcScT8eRg7Ck2BQU1Hf7SSguCsi_ksEpgbDGXuYhBYTOdB6tXwchLBr8IW9wjtua",
+        narasiLabel: "Narasi Fasilitator",
+        narasi: '"Storyboard adalah cetak biru yang menjelaskan apa yang tampil di layar, narasi pendukung, aktivitas siswa, dan sistem respons."',
+        aktivitasLabel: "Aktivitas Peserta",
+        aktivitas: "Mengamati contoh storyboard pembelajaran digital dan memahami struktur dasarnya.",
+        outputLabel: "Hasil Diharapkan",
+        output: "Peserta memahami fungsi storyboard sebagai panduan produksi media.",
+        challengePrompt: "Mengapa kita perlu membuat Storyboard terlebih dahulu sebelum langsung membuat media atau coding aplikasi pembelajaran?",
+        color: 0x38bdf8
+      },
+      {
+        id: 13,
+        title: "Adegan 13: Apresiasi & Pencapaian Storyboard",
+        subtitle: "Milestone Spesial Storyboard",
+        duration: "Milestone Success",
+        botName: 'Unit-X 13 (Maestro Bot)',
+        botStatus: "Menyematkan lencana Maestro Arsitek Pembelajaran Digital kepada seluruh peserta!",
+        visualIcon: "fa-award",
+        visualTitle: "Storyboard Selesai Dirancang",
+        visualDesc: "Pencapaian puncak dalam menyusun cetak biru media pembelajaran digital yang utuh dan profesional.",
+        image: "https://images.stockcake.com/public/6/1/b/61ba8e5f-149b-4395-8eec-41e9882f0c79_large/futuristic-digital-learning-stockcake.jpg",
+        narasiLabel: "Narasi Fasilitator",
+        narasi: '"Selamat sudah berhasil membuat storyboard!"',
+        aktivitasLabel: "Aktivitas Peserta",
+        aktivitas: "Memberikan tepuk tangan dan apresiasi penuh atas tuntasnya rancangan cetak biru storyboard pembelajaran interaktif berkarakter adiwiyata.",
+        outputLabel: "Hasil Diharapkan",
+        output: "Peserta merasa bangga dan siap mempresentasikan hasil karya serta melanjutkan ke tahap produksi nyata.",
+        actionType: "celebrate",
+        actionLabel: "Rayakan Tuntasnya Storyboard (+XP)",
+        challengePrompt: "Tunjukkan hasil Storyboard kelompok Anda! Panel mana yang menurut kelompok Anda paling kreatif?",
+        color: 0xfbbf24
+      },
+      {
+        id: 14,
+        title: "Adegan 14: Repositori & Pengumpulan Proyek Peserta",
+        subtitle: "Google Drive Cloud Storage",
+        duration: "Cloud Repository",
+        botName: 'Unit-X 14 (Cloud Guardian)',
+        botStatus: "Menyinkronkan seluruh portofolio modul ajar, aset AI, dan storyboard ke awan terpusat.",
+        visualIcon: "fa-cloud-arrow-up",
+        visualTitle: "Folder Penyimpanan Bersama Google Drive",
+        visualDesc: "Akses tautan folder Google Drive untuk mengunggah dan mengunduh seluruh hasil karya kelompok pelatihan.",
+        image: "https://images.stockcake.com/public/b/e/8/be81c6db-630d-45fc-8ea7-a3674d812e95_large/glowing-digital-network-stockcake.jpg",
+        narasiLabel: "Narasi Fasilitator",
+        narasi: '"Seluruh aset digital, draf modul ajar, dan dokumen storyboard yang telah Anda buat dapat diunggah ke folder cloud bersama ini agar dapat diakses, dinilai, dan dijadikan referensi pengimbasan."',
+        aktivitasLabel: "Aktivitas Peserta",
+        aktivitas: "Mengunggah file hasil kerja kelompok masing-masing ke dalam folder penyimpanan Google Drive yang telah disediakan.",
+        outputLabel: "Hasil Diharapkan",
+        output: "Terhimpunnya seluruh portofolio digital pelatihan dalam satu repositori awan yang terpusat dan aman.",
+        actionType: "link",
+        actionLabel: "Buka Folder Google Drive Proyek",
+        actionUrl: "https://drive.google.com/drive/folders/1EJ4IGAvMJeaCwmcjIrsOJRZIMnXJb1Il?usp=sharing",
+        challengePrompt: "Pastikan file kelompok Anda telah diberi nama sesuai format (Nama_Mapel_Adiwiyata) dan diunggah ke Google Drive!",
+        color: 0x34d399
+      },
+      {
+        id: 15,
+        title: "Adegan 15: Presentasi & Tindak Lanjut",
+        subtitle: "Sesi Penutup Inti",
+        duration: "30 Menit",
+        botName: 'Unit-X 15 (Finalizer Bot)',
+        botStatus: "Memfasilitasi pameran karya, evaluasi sejawat (peer-review), dan rencana aksi kelas.",
+        visualIcon: "fa-flag-checkered",
+        visualTitle: "Galeri Karya & Komitmen",
+        visualDesc: "Pameran hasil kelompok, rubrik penilaian sejawat, dan rencana tindak lanjut kelas.",
+        image: "https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcT4wi37bdT8vQtD710k3vLyUE2Capw9oIpcvaSb8_dHtKuNCCKGkbCNRn8-jeq_",
+        narasiLabel: "Narasi Fasilitator",
+        narasi: '"Keberhasilan pelatihan ini diukur dari kualitas rancangan modul dan perubahan nyata pada pengalaman belajar peserta didik di kelas masing-masing."',
+        aktivitasLabel: "Aktivitas Peserta",
+        aktivitas: "Kelompok mempresentasikan hasil karya, melakukan umpan balik (peer-review), dan menyusun rencana penerapan di kelas.",
+        outputLabel: "Hasil Akhir (Final Output)",
+        output: "• Paket mini pembelajaran (Modul Ajar Adiwiyata + Materi Digital AI + Storyboard) • Hasil evaluasi sejawat (peer review) & folder repositori cloud • Rencana tindak lanjut pembelajaran.",
+        challengePrompt: "Berikan 1 umpan balik positif yang membangun untuk karya kelompok rekan yang sedang tampil di depan!",
+        color: 0x38bdf8
+      },
+      {
+        id: 16,
+        title: "Adegan 16: Penutup & Apresiasi Tertinggi",
+        subtitle: "Slide Akhir Sesi • Grand Finale",
+        duration: "Grand Finale",
+        botName: 'Unit-X 16 (Galaxy Prime)',
+        botStatus: "Misi Ekspedisi Selesai 100%! Seluruh sistem siap diimplementasikan di sekolah.",
+        visualIcon: "fa-hands-praying",
+        visualTitle: "Terima Kasih & Sampai Jumpa!",
+        visualDesc: "Atas semangat luar biasa, dedikasi, dan partisipasi aktif seluruh peserta dalam transformasi pendidikan digital!",
+        image: "https://images.stockcake.com/public/6/1/b/61ba8e5f-149b-4395-8eec-41e9882f0c79_large/futuristic-digital-learning-stockcake.jpg",
+        narasiLabel: "Pesan Penutup Tim Fasilitator",
+        narasi: '"Pendidikan adalah kunci masa depan bumi kita. Teruslah berkarya, menginspirasi, dan mencetak generasi emas yang berkarakter Adiwiyata serta melek teknologi AI. Sampai Jumpa pada Pelatihan & Inovasi Berikutnya! 🚀"',
+        aktivitasLabel: "Total Rekomendasi Waktu Pelatihan",
+        aktivitas: "195 Menit Inti + 15 Menit Istirahat + 30 Menit Presentasi = 4 Jam Total Rekomendasi Profesional.",
+        outputLabel: "Tim Fasilitator & Kreator",
+        output: "Dewi Oktavia, S.Pd • Cahyo Ramadhan, S.Pd • Fahrudin, S.Pd.I | Kreator : Fahrudin, S.Pd.I - SMKN 30 JAKARTA",
+        actionType: "celebrate",
+        actionLabel: "Luncurkan Kembang Api Penutup 3D!",
+        challengePrompt: "Satu kata yang menggambarkan perasaan dan semangat Bapak/Ibu setelah mengikuti ekspedisi pelatihan hari ini!",
+        color: 0xfbbf24
+      }
+    ];
+
+    const RANKS = [
+      "Lv.1 Eco-Initiate", "Lv.2 Green Mapper", "Lv.3 AI Architect", "Lv.4 Prompt Navigator",
+      "Lv.5 Module Champion", "Lv.6 Interactive Pioneer", "Lv.7 Neural Synthesizer", "Lv.8 Blueprint Curator",
+      "Lv.9 Gamification Explorer", "Lv.10 MPI Master", "Lv.11 Visual Designer", "Lv.12 Storyboard Engineer",
+      "Lv.13 Digital Maestro", "Lv.14 Cloud Guardian", "Lv.15 EdTech Innovator", "Lv.16 Galaxy Prime Educator"
+    ];
+
+    // =========================================================================
+    // 2. WEB AUDIO SYNTHESIZER (NO EXTERNAL MP3 NEEDED - GUARANTEED WORKING)
+    // =========================================================================
+    let audioCtx = null;
+    let soundEnabled = true;
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playSynthSound(type) {
+      if (!soundEnabled) return;
+      initAudio();
+      if (!audioCtx) return;
+
+      const now = audioCtx.currentTime;
+      if (type === 'step') {
+        // Gentle futuristic chime
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(528, now);
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.18);
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.24);
+      } else if (type === 'fanfare') {
+        // Warm harmonic chord burst for achievements
+        const freqs = [440, 554.37, 659.25, 880];
+        freqs.forEach((f, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(f, now + idx * 0.06);
+          gain.gain.setValueAtTime(0.07, now + idx * 0.06);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.65);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now + idx * 0.06);
+          osc.stop(now + idx * 0.06 + 0.7);
+        });
+      }
+    }
+
+    function toggleAudio() {
+      soundEnabled = !soundEnabled;
+      const icon = document.getElementById('audio-icon');
+      const btn = document.getElementById('audio-btn');
+      if (soundEnabled) {
+        icon.className = 'fa-solid fa-volume-high text-sm';
+        btn.classList.replace('text-slate-400', 'text-emerald-300');
+        playSynthSound('step');
+      } else {
+        icon.className = 'fa-solid fa-volume-xmark text-sm';
+        btn.classList.replace('text-emerald-300', 'text-slate-400');
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      }
+    }
+
+    // =========================================================================
+    // 2B. BACKGROUND MUSIC (BACKSOUND) ENGINE: SYNTH + LOCAL PC UPLOAD PLAYLIST
+    // =========================================================================
+    const BGM_PLAYLIST = [
+      {
+        id: 'synth-solarpunk',
+        title: '1. Solarpunk Bioluminescence (Ambient Synth Bawaan)',
+        type: 'synth',
+        preset: 'solarpunk'
+      },
+      {
+        id: 'synth-cyberforest',
+        title: '2. Hutan Siber Adiwiyata (Harmoni Alam 432Hz)',
+        type: 'synth',
+        preset: 'forest'
+      },
+      {
+        id: 'synth-galaxy',
+        title: '3. Eksplorasi Orbit Galaxy Bot (Futuristic Space Pad)',
+        type: 'synth',
+        preset: 'galaxy'
+      }
+    ];
+
+    let currentBgmIndex = 0;
+    let isBgmPlaying = false;
+    let isBgmLoop = true;
+    let bgmBaseVolume = 0.35; // 35% default comfortable background level
+    let isDucking = false;
+    let synthBgmInterval = null;
+    let synthBgmMasterGain = null;
+
+    function initBgmPlaylistUI() {
+      const select = document.getElementById('bgm-track-select');
+      if (!select) return;
+      select.innerHTML = '';
+      BGM_PLAYLIST.forEach((item, idx) => {
+        const opt = document.createElement('option');
+        opt.value = idx;
+        opt.textContent = item.title;
+        if (idx === currentBgmIndex) opt.selected = true;
+        select.appendChild(opt);
+      });
+      updateBgmMetadataUI();
+    }
+
+    function updateBgmMetadataUI() {
+      const track = BGM_PLAYLIST[currentBgmIndex];
+      if (!track) return;
+      document.getElementById('bgm-track-title').textContent = track.title;
+      document.getElementById('bgm-source-type').textContent =
+        track.type === 'local' ? 'File Audio PC Lokal' : 'Synthesizer Ambient Internal';
+
+      const select = document.getElementById('bgm-track-select');
+      if (select) select.value = currentBgmIndex;
+    }
+
+    function getEffectiveBgmVolume() {
+      const autoDuck = document.getElementById('bgm-autoduck-check')?.checked;
+      return (isDucking && autoDuck) ? bgmBaseVolume * 0.22 : bgmBaseVolume;
+    }
+
+    function applyEffectiveBgmVolume() {
+      const effVol = getEffectiveBgmVolume();
+      const audioEl = document.getElementById('bgm-audio-element');
+      if (audioEl) {
+        audioEl.volume = Math.min(1, Math.max(0, effVol));
+      }
+      if (synthBgmMasterGain && audioCtx) {
+        synthBgmMasterGain.gain.setTargetAtTime(effVol * 0.35, audioCtx.currentTime, 0.25);
+      }
+    }
+
+    function startGenerativeSynthBgm(preset) {
+      stopGenerativeSynthBgm();
+      initAudio();
+      if (!audioCtx) return;
+
+      synthBgmMasterGain = audioCtx.createGain();
+      synthBgmMasterGain.gain.setValueAtTime(getEffectiveBgmVolume() * 0.35, audioCtx.currentTime);
+      synthBgmMasterGain.connect(audioCtx.destination);
+
+      // Chord palettes tailored for comfortable, inspiring educational presentations
+      const palettes = {
+        solarpunk: [
+          [261.63, 329.63, 392.00, 493.88], // Cmaj7
+          [220.00, 261.63, 329.63, 392.00], // Am7
+          [174.61, 220.00, 261.63, 349.23], // Fmaj7
+          [196.00, 246.94, 293.66, 392.00]  // G6
+        ],
+        forest: [
+          [216.00, 272.14, 323.63, 432.00], // Warm 432Hz Nature tuning
+          [192.43, 242.45, 288.33, 384.87],
+          [161.82, 216.00, 272.14, 323.63],
+          [181.63, 242.45, 272.14, 363.27]
+        ],
+        galaxy: [
+          [146.83, 220.00, 293.66, 369.99], // Dmaj9 space pad
+          [130.81, 196.00, 246.94, 329.63], // Cmaj7#11
+          [164.81, 246.94, 329.63, 415.30], // Emaj
+          [110.00, 164.81, 220.00, 277.18]  // Aadd9
+        ]
+      };
+
+      const chords = palettes[preset] || palettes.solarpunk;
+      let step = 0;
+
+      const triggerPadChord = () => {
+        if (!isBgmPlaying || BGM_PLAYLIST[currentBgmIndex].type !== 'synth') return;
+        const now = audioCtx.currentTime;
+        const chord = chords[step % chords.length];
+        step++;
+
+        chord.forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const noteGain = audioCtx.createGain();
+          osc.type = idx % 2 === 0 ? 'sine' : 'triangle';
+          osc.frequency.setValueAtTime(freq, now);
+
+          // Gentle ambient swell envelope
+          noteGain.gain.setValueAtTime(0.001, now);
+          noteGain.gain.linearRampToValueAtTime(0.12 / chord.length, now + 1.4);
+          noteGain.gain.exponentialRampToValueAtTime(0.0008, now + 4.6);
+
+          osc.connect(noteGain);
+          noteGain.connect(synthBgmMasterGain);
+          osc.start(now);
+          osc.stop(now + 4.7);
+        });
+
+        // Subtle high bioluminescent nature droplet chime
+        if (Math.random() > 0.25) {
+          const chimeOsc = audioCtx.createOscillator();
+          const chimeGain = audioCtx.createGain();
+          chimeOsc.type = 'sine';
+          const chimeFreq = chord[Math.floor(Math.random() * chord.length)] * 2;
+          chimeOsc.frequency.setValueAtTime(chimeFreq, now + 0.6);
+          chimeGain.gain.setValueAtTime(0.0001, now + 0.6);
+          chimeGain.gain.linearRampToValueAtTime(0.035, now + 0.75);
+          chimeGain.gain.exponentialRampToValueAtTime(0.0001, now + 2.4);
+
+          chimeOsc.connect(chimeGain);
+          chimeGain.connect(synthBgmMasterGain);
+          chimeOsc.start(now + 0.6);
+          chimeOsc.stop(now + 2.5);
+        }
+      };
+
+      triggerPadChord();
+      synthBgmInterval = setInterval(triggerPadChord, 4200);
+    }
+
+    function stopGenerativeSynthBgm() {
+      if (synthBgmInterval) {
+        clearInterval(synthBgmInterval);
+        synthBgmInterval = null;
+      }
+      if (synthBgmMasterGain) {
+        try { synthBgmMasterGain.disconnect(); } catch (e) {}
+        synthBgmMasterGain = null;
+      }
+    }
+
+    function playCurrentBgm() {
+      const track = BGM_PLAYLIST[currentBgmIndex];
+      const audioEl = document.getElementById('bgm-audio-element');
+      if (!track) return;
+
+      isBgmPlaying = true;
+      updateBgmPlayUI();
+      updateBgmMetadataUI();
+
+      if (track.type === 'local') {
+        stopGenerativeSynthBgm();
+        if (audioEl.src !== track.url) {
+          audioEl.src = track.url;
+        }
+        audioEl.loop = isBgmLoop;
+        applyEffectiveBgmVolume();
+        audioEl.play().catch(() => {
+          document.getElementById('bgm-status-badge').textContent = 'Klik Play untuk Mengizinkan Audio';
+        });
+      } else {
+        audioEl.pause();
+        startGenerativeSynthBgm(track.preset);
+      }
+    }
+
+    function pauseCurrentBgm() {
+      isBgmPlaying = false;
+      const audioEl = document.getElementById('bgm-audio-element');
+      if (audioEl) audioEl.pause();
+      stopGenerativeSynthBgm();
+      updateBgmPlayUI();
+    }
+
+    function toggleBgmPlay() {
+      if (isBgmPlaying) {
+        pauseCurrentBgm();
+      } else {
+        playCurrentBgm();
+      }
+    }
+
+    function updateBgmPlayUI() {
+      const topIcon = document.getElementById('top-bgm-play-icon');
+      const drawerIcon = document.getElementById('drawer-bgm-play-icon');
+      const topEq = document.getElementById('top-eq-container');
+      const drawerEq = document.getElementById('drawer-eq-container');
+      const statusBadge = document.getElementById('bgm-status-badge');
+
+      if (isBgmPlaying) {
+        if (topIcon) topIcon.className = 'fa-solid fa-pause text-xs';
+        if (drawerIcon) drawerIcon.className = 'fa-solid fa-pause';
+        if (topEq) topEq.classList.add('eq-playing');
+        if (drawerEq) drawerEq.classList.add('eq-playing');
+        if (statusBadge) statusBadge.textContent = 'Sedang Memutar Backsound...';
+      } else {
+        if (topIcon) topIcon.className = 'fa-solid fa-play text-xs';
+        if (drawerIcon) drawerIcon.className = 'fa-solid fa-play';
+        if (topEq) topEq.classList.remove('eq-playing');
+        if (drawerEq) drawerEq.classList.remove('eq-playing');
+        if (statusBadge) statusBadge.textContent = 'Backsound Dijeda';
+      }
+    }
+
+    function selectBgmTrack(indexStr) {
+      const idx = parseInt(indexStr, 10);
+      if (isNaN(idx) || idx < 0 || idx >= BGM_PLAYLIST.length) return;
+      currentBgmIndex = idx;
+      playCurrentBgm();
+    }
+
+    function nextBgmTrack() {
+      currentBgmIndex = (currentBgmIndex + 1) % BGM_PLAYLIST.length;
+      playCurrentBgm();
+    }
+
+    function prevBgmTrack() {
+      currentBgmIndex = (currentBgmIndex - 1 + BGM_PLAYLIST.length) % BGM_PLAYLIST.length;
+      playCurrentBgm();
+    }
+
+    function toggleBgmLoop() {
+      isBgmLoop = !isBgmLoop;
+      const audioEl = document.getElementById('bgm-audio-element');
+      if (audioEl) audioEl.loop = isBgmLoop;
+
+      const btn = document.getElementById('bgm-loop-btn');
+      const label = document.getElementById('bgm-loop-label');
+      if (isBgmLoop) {
+        label.textContent = 'Loop: ON';
+        btn.className = 'px-2.5 py-1.5 rounded-xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[11px] font-bold flex items-center gap-1 transition';
+      } else {
+        label.textContent = 'Loop: OFF';
+        btn.className = 'px-2.5 py-1.5 rounded-xl bg-slate-800 border border-slate-600 text-slate-400 text-[11px] font-bold flex items-center gap-1 transition';
+      }
+    }
+
+    function changeBgmVolume(val) {
+      bgmBaseVolume = parseInt(val, 10) / 100;
+      document.getElementById('bgm-vol-label').textContent = `${val}%`;
+      const volIcon = document.getElementById('bgm-vol-icon');
+      if (bgmBaseVolume === 0) {
+        volIcon.className = 'fa-solid fa-volume-xmark text-rose-400';
+      } else if (bgmBaseVolume < 0.5) {
+        volIcon.className = 'fa-solid fa-volume-low text-emerald-400';
+      } else {
+        volIcon.className = 'fa-solid fa-volume-high text-emerald-400';
+      }
+      applyEffectiveBgmVolume();
+    }
+
+    function handleLocalAudioUpload(event) {
+      const files = Array.from(event.target.files || []);
+      if (files.length === 0) return;
+
+      let firstNewIndex = BGM_PLAYLIST.length;
+      files.forEach((file) => {
+        const objectUrl = URL.createObjectURL(file);
+        const cleanName = file.name.replace(/\.[^/.]+$/, '');
+        BGM_PLAYLIST.push({
+          id: 'local-' + Date.now() + '-' + Math.random(),
+          title: `🎵 [PC] ${cleanName}`,
+          type: 'local',
+          url: objectUrl
+        });
+      });
+
+      currentBgmIndex = firstNewIndex;
+      initBgmPlaylistUI();
+      playCurrentBgm();
+
+      // Ensure drawer is open so user sees their uploaded track playing
+      const drawer = document.getElementById('bgm-studio-drawer');
+      if (drawer && drawer.classList.contains('hidden')) {
+        toggleBgmDrawer();
+      }
+    }
+
+    function toggleBgmDrawer() {
+      const drawer = document.getElementById('bgm-studio-drawer');
+      if (!drawer) return;
+      if (drawer.classList.contains('hidden')) {
+        drawer.classList.remove('hidden');
+        drawer.classList.add('flex');
+        playSynthSound('step');
+      } else {
+        drawer.classList.add('hidden');
+        drawer.classList.remove('flex');
+      }
+    }
+
+    // Handle HTML5 Audio Track Ended (Advance to next track if Loop is OFF)
+    document.getElementById('bgm-audio-element')?.addEventListener('ended', () => {
+      if (!isBgmLoop) {
+        nextBgmTrack();
+      }
+    });
+
+    // =========================================================================
+    // 3. INDONESIAN VOICE TTS FOR GALAXY BOT NARRATION (WITH AUTO-DUCKING)
+    // =========================================================================
+    function speakCurrentNarration() {
+      if (!('speechSynthesis' in window)) return;
+      const synth = window.speechSynthesis;
+      if (synth.speaking) {
+        synth.cancel();
+        isDucking = false;
+        applyEffectiveBgmVolume();
+        document.getElementById('tts-label').textContent = 'Suara Bot';
+        document.getElementById('tts-icon').className = 'fa-solid fa-volume-low';
+        return;
+      }
+
+      const scene = SCENES[currentSceneIndex];
+      const cleanText = `${scene.title}. ${scene.narasi.replace(/["•]/g, '')}`;
+      const utter = new SpeechSynthesisUtterance(cleanText);
+      utter.lang = 'id-ID';
+      utter.rate = 1.02;
+      utter.pitch = 1.05;
+
+      utter.onstart = () => {
+        isDucking = true;
+        applyEffectiveBgmVolume();
+        document.getElementById('tts-label').textContent = 'Berhenti';
+        document.getElementById('tts-icon').className = 'fa-solid fa-waveform-lines fa-beat text-emerald-300';
+      };
+      utter.onend = () => {
+        isDucking = false;
+        applyEffectiveBgmVolume();
+        document.getElementById('tts-label').textContent = 'Suara Bot';
+        document.getElementById('tts-icon').className = 'fa-solid fa-volume-low';
+      };
+      utter.onerror = () => {
+        isDucking = false;
+        applyEffectiveBgmVolume();
+      };
+
+      synth.speak(utter);
+    }
+
+    // =========================================================================
+    // 4. THREE.JS 3D SOLARPUNK NATURE & GALAXY BOT WORLD
+    // =========================================================================
+    let scene3D, camera, renderer;
+    let waypointMeshes = [];
+    let waypointRings = [];
+    let galaxyBotGroup, botCoreMesh, botRing1, botRing2;
+    let firefliesPoints, celebrationParticles;
+    let celebrationTimer = 0;
+
+    // Camera & Bot Interpolation Targets
+    let currentSceneIndex = 0;
+    let camCurrentPos = new THREE.Vector3(0, 12, 35);
+    let camTargetPos = new THREE.Vector3(0, 8, 25);
+    let camCurrentLookAt = new THREE.Vector3(0, 3, 0);
+    let camTargetLookAt = new THREE.Vector3(0, 3, 0);
+    let botCurrentPos = new THREE.Vector3(0, 5, 0);
+    let botTargetPos = new THREE.Vector3(0, 5, 0);
+
+    // Mouse Parallax
+    let mouseX = 0, mouseY = 0;
+    let raycaster = new THREE.Raycaster();
+    let mouseVec = new THREE.Vector2();
+
+    // Precomputed 3D Spiral Archipelago Coordinates for the 16 Scenes
+    const WAYPOINT_COORDS = [];
+    for (let i = 0; i < 16; i++) {
+      const angle = i * 0.65;
+      const radius = 14 + i * 3.8;
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius;
+      const y = 2.5 + Math.sin(i * 0.9) * 2.2 + (i * 0.35);
+      WAYPOINT_COORDS.push(new THREE.Vector3(x, y, z));
+    }
+
+    function init3DWorld() {
+      const canvas = document.getElementById('webgl-canvas');
+      scene3D = new THREE.Scene();
+      scene3D.background = new THREE.Color(0x07120f);
+      scene3D.fog = new THREE.FogExp2(0x07120f, 0.0085);
+
+      camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 400);
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.outputEncoding = THREE.sRGBEncoding;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.12;
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+      // Lights
+      const ambientLight = new THREE.AmbientLight(0xa7f3d0, 0.82);
+      scene3D.add(ambientLight);
+
+      const dirLight = new THREE.DirectionalLight(0xd8f4ff, 1.55);
+      dirLight.position.set(30, 60, 40);
+      dirLight.castShadow = true;
+      dirLight.shadow.mapSize.set(1024, 1024);
+      dirLight.shadow.camera.left = -80; dirLight.shadow.camera.right = 80;
+      dirLight.shadow.camera.top = 80; dirLight.shadow.camera.bottom = -80;
+      dirLight.shadow.bias = -0.00025;
+      scene3D.add(dirLight);
+      const rimLight = new THREE.PointLight(0x34d399, 2.1, 180);
+      rimLight.position.set(-35, 18, -30);
+      scene3D.add(rimLight);
+      const operaGoldLight = new THREE.PointLight(0xffd98a, 1.7, 100);
+      operaGoldLight.position.set(12, 30, 12);
+      scene3D.add(operaGoldLight);
+
+      const warmLight = new THREE.PointLight(0xfbbf24, 1.2, 120);
+      warmLight.position.set(0, 25, 0);
+      scene3D.add(warmLight);
+
+      // 1. Cyber-Eco Ground Grid & Water Plane
+      const gridHelper = new THREE.GridHelper(300, 75, 0x10b981, 0x0f2922);
+      gridHelper.position.y = -2;
+      scene3D.add(gridHelper);
+
+      // Central Mother Tree / Gaia Core Spire
+      createCentralGaiaCore();
+
+      // 2. Build 16 Floating Eco-Islands, Cyber Trees & Holographic Crystals
+      buildWaypointsAndIslands();
+
+      // 3. Build Glowing Constellation Energy Path Connecting 1 -> 16
+      buildEnergyPath();
+
+      // 4. Build 3D Hovering "Galaxy Bot" Companion Drone
+      buildGalaxyBot();
+
+      // 5. Build Hyperrealistic Starfield & Bioluminescent Fireflies
+      buildCinematicStarfield();
+      buildParticles();
+      scene3D.traverse((object) => {
+        if (object.isMesh) { object.castShadow = true; object.receiveShadow = true; }
+      });
+
+      // Set Initial Camera & Bot Positions
+      update3DTargetsForScene(0, true);
+
+      // Event Listeners
+      window.addEventListener('resize', onWindowResize);
+      window.addEventListener('mousemove', onMouseMove);
+      canvas.addEventListener('click', onCanvasClick);
+    }
+
+    function buildCinematicStarfield() {
+      // Layered distant stars, dust and a soft atmospheric halo enrich the existing world.
+      const count = 1800;
+      const positions = new Float32Array(count * 3);
+      const colors = new Float32Array(count * 3);
+      for (let i = 0; i < count; i++) {
+        const radius = 105 + Math.random() * 190;
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(2 * Math.random() - 1);
+        positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+        positions[i * 3 + 1] = radius * Math.cos(phi) * .72 + 28;
+        positions[i * 3 + 2] = radius * Math.sin(phi) * Math.sin(theta);
+        const tint = Math.random();
+        colors[i * 3] = tint > .82 ? 1 : .45 + Math.random() * .35;
+        colors[i * 3 + 1] = tint > .82 ? .78 : .78 + Math.random() * .2;
+        colors[i * 3 + 2] = tint > .82 ? .48 : .78 + Math.random() * .22;
+      }
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+      const stars = new THREE.Points(geometry, new THREE.PointsMaterial({
+        size: .72, vertexColors: true, transparent: true, opacity: .82,
+        sizeAttenuation: true, depthWrite: false
+      }));
+      stars.name = 'Cinematic Starfield';
+      scene3D.add(stars);
+
+      const halo = new THREE.Mesh(
+        new THREE.SphereGeometry(250, 32, 24),
+        new THREE.MeshBasicMaterial({ color: 0x0b3529, side: THREE.BackSide, transparent: true, opacity: .13 })
+      );
+      halo.name = 'Atmospheric Halo';
+      scene3D.add(halo);
+    }
+
+    function createCentralGaiaCore() {
+      const group = new THREE.Group();
+      // Low-poly glowing mountain island at center
+      const islandGeo = new THREE.CylinderGeometry(8, 2, 6, 7);
+      const islandMat = new THREE.MeshStandardMaterial({ color: 0x0f291e, flatShading: true, roughness: 0.7 });
+      const island = new THREE.Mesh(islandGeo, islandMat);
+      island.position.y = 0;
+      group.add(island);
+
+      // Glowing Energy Tree Trunk
+      const trunkGeo = new THREE.CylinderGeometry(0.6, 1.4, 9, 6);
+      const trunkMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, emissive: 0xd97706, emissiveIntensity: 0.3, flatShading: true });
+      const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+      trunk.position.y = 6;
+      group.add(trunk);
+
+      // Bioluminescent Canopy Rings
+      for (let i = 0; i < 3; i++) {
+        const canopyGeo = new THREE.ConeGeometry(5.5 - i * 1.3, 4, 7);
+        const canopyMat = new THREE.MeshStandardMaterial({
+          color: 0x10b981,
+          emissive: 0x059669,
+          emissiveIntensity: 0.45,
+          flatShading: true,
+          transparent: true,
+          opacity: 0.9
+        });
+        const canopy = new THREE.Mesh(canopyGeo, canopyMat);
+        canopy.position.y = 9 + i * 2.5;
+        group.add(canopy);
+      }
+      scene3D.add(group);
+    }
+
+    function buildWaypointsAndIslands() {
+      const islandMat = new THREE.MeshStandardMaterial({ color: 0x132a23, flatShading: true, roughness: 0.8 });
+      const mossMat = new THREE.MeshStandardMaterial({ color: 0x065f46, flatShading: true });
+
+      WAYPOINT_COORDS.forEach((pos, idx) => {
+        const sceneData = SCENES[idx];
+        const stationGroup = new THREE.Group();
+        stationGroup.position.copy(pos);
+
+        // Floating Rock Island Base
+        const baseGeo = new THREE.CylinderGeometry(3.2, 1.0, 2.8, 6);
+        const baseMesh = new THREE.Mesh(baseGeo, islandMat);
+        baseMesh.position.y = -2.2;
+        stationGroup.add(baseMesh);
+
+        // Moss Top Cap
+        const topGeo = new THREE.CylinderGeometry(3.4, 3.2, 0.5, 6);
+        const topMesh = new THREE.Mesh(topGeo, mossMat);
+        topMesh.position.y = -0.6;
+        stationGroup.add(topMesh);
+
+        // Mini Solarpunk Pine Trees on Island
+        for (let t = 0; t < 2; t++) {
+          const treeGroup = new THREE.Group();
+          const angle = t * Math.PI + 0.5;
+          treeGroup.position.set(Math.cos(angle) * 2.1, -0.3, Math.sin(angle) * 2.1);
+
+          const leavesGeo = new THREE.ConeGeometry(0.85, 2.4, 5);
+          const leavesMat = new THREE.MeshStandardMaterial({
+            color: idx % 2 === 0 ? 0x34d399 : 0x38bdf8,
+            emissive: idx % 2 === 0 ? 0x059669 : 0x0284c7,
+            emissiveIntensity: 0.25,
+            flatShading: true
+          });
+          const leaves = new THREE.Mesh(leavesGeo, leavesMat);
+          leaves.position.y = 1.2;
+          treeGroup.add(leaves);
+          stationGroup.add(treeGroup);
+        }
+
+        // Floating Holographic Waypoint Crystal (Interactive)
+        const crystalGeo = new THREE.OctahedronGeometry(1.15, 0);
+        const crystalMat = new THREE.MeshStandardMaterial({
+          color: sceneData.color,
+          emissive: sceneData.color,
+          emissiveIntensity: 0.6,
+          flatShading: true,
+          metalness: 0.3,
+          roughness: 0.2
+        });
+        const crystal = new THREE.Mesh(crystalGeo, crystalMat);
+        crystal.position.y = 1.6;
+        crystal.userData = { sceneIndex: idx };
+        stationGroup.add(crystal);
+        waypointMeshes.push(crystal);
+
+        // Glowing Orbital Ring around Crystal
+        const ringGeo = new THREE.TorusGeometry(1.7, 0.06, 8, 32);
+        const ringMat = new THREE.MeshBasicMaterial({ color: sceneData.color, transparent: true, opacity: 0.65 });
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        ring.position.y = 1.6;
+        ring.rotation.x = Math.PI / 2;
+        stationGroup.add(ring);
+        waypointRings.push(ring);
+
+        scene3D.add(stationGroup);
+      });
+    }
+
+    function buildEnergyPath() {
+      const curve = new THREE.CatmullRomCurve3(WAYPOINT_COORDS);
+      const points = curve.getPoints(200);
+      const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
+      const lineMat = new THREE.LineBasicMaterial({ color: 0x34d399, transparent: true, opacity: 0.45 });
+      const pathLine = new THREE.Line(lineGeo, lineMat);
+      scene3D.add(pathLine);
+    }
+
+    function buildGalaxyBot() {
+      galaxyBotGroup = new THREE.Group();
+
+      // Core Sphere
+      const coreGeo = new THREE.IcosahedronGeometry(0.75, 1);
+      const coreMat = new THREE.MeshStandardMaterial({
+        color: 0x38bdf8,
+        emissive: 0x0284c7,
+        emissiveIntensity: 0.8,
+        flatShading: true
+      });
+      botCoreMesh = new THREE.Mesh(coreGeo, coreMat);
+      galaxyBotGroup.add(botCoreMesh);
+
+      // Gold Halo Ring 1
+      const r1Geo = new THREE.TorusGeometry(1.15, 0.07, 8, 28);
+      const r1Mat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, emissive: 0xd97706, emissiveIntensity: 0.5 });
+      botRing1 = new THREE.Mesh(r1Geo, r1Mat);
+      galaxyBotGroup.add(botRing1);
+
+      // Emerald Halo Ring 2
+      const r2Geo = new THREE.TorusGeometry(1.4, 0.05, 8, 28);
+      const r2Mat = new THREE.MeshBasicMaterial({ color: 0x34d399 });
+      botRing2 = new THREE.Mesh(r2Geo, r2Mat);
+      botRing2.rotation.y = Math.PI / 2;
+      galaxyBotGroup.add(botRing2);
+
+      // Bot Point Light
+      const botLight = new THREE.PointLight(0x34d399, 1.5, 18);
+      galaxyBotGroup.add(botLight);
+
+      scene3D.add(galaxyBotGroup);
+    }
+
+    function buildParticles() {
+      // 1. Ambient Bioluminescent Fireflies
+      const count = 450;
+      const positions = new Float32Array(count * 3);
+      const colors = new Float32Array(count * 3);
+
+      for (let i = 0; i < count; i++) {
+        positions[i * 3] = (Math.random() - 0.5) * 180;
+        positions[i * 3 + 1] = Math.random() * 40 - 2;
+        positions[i * 3 + 2] = (Math.random() - 0.5) * 180;
+
+        // Mix of Emerald, Sky Blue, and Warm Amber fireflies
+        const choice = Math.random();
+        if (choice < 0.5) {
+          colors[i * 3] = 0.2; colors[i * 3 + 1] = 0.85; colors[i * 3 + 2] = 0.6;
+        } else if (choice < 0.8) {
+          colors[i * 3] = 0.22; colors[i * 3 + 1] = 0.74; colors[i * 3 + 2] = 0.97;
+        } else {
+          colors[i * 3] = 0.98; colors[i * 3 + 1] = 0.75; colors[i * 3 + 2] = 0.14;
+        }
+      }
+
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+      const mat = new THREE.PointsMaterial({
+        size: 0.55,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.8
+      });
+
+      firefliesPoints = new THREE.Points(geo, mat);
+      scene3D.add(firefliesPoints);
+
+      // 2. Celebration Particle Burst Group
+      const burstCount = 120;
+      const burstPos = new Float32Array(burstCount * 3);
+      const burstGeo = new THREE.BufferGeometry();
+      burstGeo.setAttribute('position', new THREE.BufferAttribute(burstPos, 3));
+      const burstMat = new THREE.PointsMaterial({ color: 0xfbbf24, size: 0.75, transparent: true, opacity: 0 });
+      celebrationParticles = new THREE.Points(burstGeo, burstMat);
+      scene3D.add(celebrationParticles);
+    }
+
+    function triggerCelebrationBurst() {
+      playSynthSound('fanfare');
+      celebrationTimer = 1.0;
+      const posAttr = celebrationParticles.geometry.attributes.position;
+      const center = WAYPOINT_COORDS[currentSceneIndex];
+      for (let i = 0; i < posAttr.count; i++) {
+        posAttr.setXYZ(
+          i,
+          center.x + (Math.random() - 0.5) * 8,
+          center.y + 2 + Math.random() * 6,
+          center.z + (Math.random() - 0.5) * 8
+        );
+      }
+      posAttr.needsUpdate = true;
+      celebrationParticles.material.opacity = 1;
+    }
+
+    function update3DTargetsForScene(index, instant = false) {
+      const targetWP = WAYPOINT_COORDS[index];
+
+      // Position camera at an angle looking at the waypoint crystal and central world
+      const dirFromCenter = targetWP.clone().normalize();
+      const camOffset = new THREE.Vector3(
+        dirFromCenter.x * 11 - dirFromCenter.z * 5,
+        4.2,
+        dirFromCenter.z * 11 + dirFromCenter.x * 5
+      );
+
+      camTargetPos.copy(targetWP).add(camOffset);
+      camTargetLookAt.copy(targetWP).add(new THREE.Vector3(0, 1.2, 0));
+
+      // Galaxy Bot hovers right next to the active crystal
+      botTargetPos.copy(targetWP).add(new THREE.Vector3(-dirFromCenter.z * 2.4, 3.1, dirFromCenter.x * 2.4));
+
+      if (instant) {
+        camCurrentPos.copy(camTargetPos);
+        camCurrentLookAt.copy(camTargetLookAt);
+        botCurrentPos.copy(botTargetPos);
+      }
+    }
+
+    function focusCameraOnCrystal() {
+      const targetWP = WAYPOINT_COORDS[currentSceneIndex];
+      const dir = targetWP.clone().normalize();
+      camTargetPos.copy(targetWP).add(new THREE.Vector3(dir.x * 6, 2.5, dir.z * 6));
+      playSynthSound('step');
+    }
+
+    function zoomOutCameraFromCrystal() {
+      const targetWP = WAYPOINT_COORDS[currentSceneIndex];
+      const dir = targetWP.clone().normalize();
+      camTargetPos.copy(targetWP).add(new THREE.Vector3(dir.x * 19 - dir.z * 8, 8.5, dir.z * 19 + dir.x * 8));
+      playSynthSound('step');
+    }
+
+    // State for Hologram Visual Minimize / Expand & Quest Panel Minimize
+    let isHologramMinimized = false;
+    let isHologramExpanded = false;
+    let isQuestBodyMinimized = false;
+
+    function toggleMinimizeVisualHologram() {
+      isHologramMinimized = !isHologramMinimized;
+      const holoCol = document.getElementById('hologram-visual-col');
+      const detailCol = document.getElementById('detail-cards-col');
+      const holoBody = document.getElementById('hologram-content-body');
+      const holoMiniBar = document.getElementById('hologram-minimized-bar');
+      const sceneImg = document.getElementById('scene-image');
+      const btnIcon = document.getElementById('icon-minimize-hologram');
+      const btnLabel = document.getElementById('label-minimize-hologram');
+      const expandBtn = document.getElementById('btn-expand-hologram');
+
+      if (isHologramMinimized) {
+        isHologramExpanded = false;
+        // Shrink Hologram Visual into a compact top bar spanning full width, giving 12 cols to the text cards
+        holoCol.className = 'md:col-span-12 flex flex-col justify-between rounded-2xl bg-slate-950/85 border border-emerald-500/30 overflow-hidden relative group min-h-0 transition-all duration-300';
+        detailCol.className = 'md:col-span-12 flex flex-col gap-3 justify-between transition-all duration-300';
+        holoBody.classList.add('hidden');
+        sceneImg.classList.add('opacity-15');
+        holoMiniBar.classList.remove('hidden');
+        holoMiniBar.classList.add('flex');
+        expandBtn.classList.add('hidden');
+
+        btnIcon.className = 'fa-solid fa-expand';
+        btnLabel.textContent = 'Tampilkan Visual';
+      } else {
+        // Restore normal 5-col / 7-col layout
+        holoCol.className = 'md:col-span-5 flex flex-col justify-between rounded-2xl bg-slate-950/70 border border-slate-800/80 overflow-hidden relative group min-h-[240px] transition-all duration-300';
+        detailCol.className = 'md:col-span-7 flex flex-col gap-3 justify-between transition-all duration-300';
+        holoBody.classList.remove('hidden');
+        sceneImg.classList.remove('opacity-15');
+        holoMiniBar.classList.add('hidden');
+        holoMiniBar.classList.remove('flex');
+        expandBtn.classList.remove('hidden');
+
+        btnIcon.className = 'fa-solid fa-compress';
+        btnLabel.textContent = 'Kecilkan';
+      }
+      playSynthSound('step');
+    }
+
+    function toggleExpandVisualHologram() {
+      if (isHologramMinimized) {
+        toggleMinimizeVisualHologram();
+      }
+      isHologramExpanded = !isHologramExpanded;
+      const holoCol = document.getElementById('hologram-visual-col');
+      const detailCol = document.getElementById('detail-cards-col');
+      const expandIcon = document.getElementById('icon-expand-hologram');
+
+      if (isHologramExpanded) {
+        holoCol.className = 'md:col-span-12 flex flex-col justify-between rounded-2xl bg-slate-950/75 border border-amber-400/50 overflow-hidden relative group min-h-[300px] transition-all duration-300';
+        detailCol.className = 'md:col-span-12 flex flex-col gap-3 justify-between transition-all duration-300';
+        expandIcon.className = 'fa-solid fa-down-left-and-up-right-to-center';
+      } else {
+        holoCol.className = 'md:col-span-5 flex flex-col justify-between rounded-2xl bg-slate-950/70 border border-slate-800/80 overflow-hidden relative group min-h-[240px] transition-all duration-300';
+        detailCol.className = 'md:col-span-7 flex flex-col gap-3 justify-between transition-all duration-300';
+        expandIcon.className = 'fa-solid fa-up-right-and-down-left-from-center';
+      }
+      playSynthSound('step');
+    }
+
+    function toggleQuestBody() {
+      isQuestBodyMinimized = !isQuestBodyMinimized;
+      const body = document.getElementById('quest-panel-body');
+      const icon = document.getElementById('icon-minimize-quest');
+      if (isQuestBodyMinimized) {
+        body.classList.add('hidden');
+        icon.className = 'fa-solid fa-window-maximize text-xs';
+      } else {
+        body.classList.remove('hidden');
+        icon.className = 'fa-solid fa-window-minimize text-xs -translate-y-1';
+      }
+      playSynthSound('step');
+    }
+
+    // Animation Loop (60FPS Smooth Flight & Bioluminescence)
+    const clock = new THREE.Clock();
+    function animate3D() {
+      requestAnimationFrame(animate3D);
+      const elapsedTime = clock.getElapsedTime();
+
+      // Rotate Waypoint Crystals & Pulse Active Crystal
+      waypointMeshes.forEach((mesh, idx) => {
+        mesh.rotation.y = elapsedTime * 1.2 + idx;
+        mesh.position.y = 1.6 + Math.sin(elapsedTime * 2.2 + idx) * 0.25;
+
+        const scale = idx === currentSceneIndex ? 1.35 + Math.sin(elapsedTime * 4) * 0.12 : 1.0;
+        mesh.scale.setScalar(scale);
+
+        const ring = waypointRings[idx];
+        ring.rotation.z = elapsedTime * 0.8;
+        ring.scale.setScalar(idx === currentSceneIndex ? 1.3 : 1.0);
+      });
+
+      // Smoothly Fly Galaxy Bot Companion
+      botCurrentPos.lerp(botTargetPos, 0.05);
+      galaxyBotGroup.position.copy(botCurrentPos);
+      galaxyBotGroup.position.y += Math.sin(elapsedTime * 3.2) * 0.3;
+      botCoreMesh.rotation.y = elapsedTime * 1.5;
+      botRing1.rotation.x = elapsedTime * 2.0;
+      botRing1.rotation.y = elapsedTime * 1.2;
+      botRing2.rotation.z = -elapsedTime * 1.8;
+
+      // Gentle Firefly Drift
+      if (firefliesPoints) {
+        firefliesPoints.rotation.y = elapsedTime * 0.02;
+      }
+
+      // Celebration Burst Animation
+      if (celebrationTimer > 0) {
+        celebrationTimer -= 0.016;
+        celebrationParticles.position.y += 0.05;
+        celebrationParticles.material.opacity = Math.max(0, celebrationTimer);
+      } else {
+        celebrationParticles.position.y = 0;
+      }
+
+      // Smooth Camera Flight + Subtle Mouse Parallax
+      const parallaxTarget = camTargetPos.clone().add(new THREE.Vector3(mouseX * 2.2, -mouseY * 1.4, 0));
+      camCurrentPos.lerp(parallaxTarget, 0.045);
+      camCurrentLookAt.lerp(camTargetLookAt, 0.06);
+
+      camera.position.copy(camCurrentPos);
+      camera.lookAt(camCurrentLookAt);
+
+      renderer.render(scene3D, camera);
+    }
+
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function onMouseMove(e) {
+      mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+      mouseY = (e.clientY / window.innerHeight) * 2 - 1;
+    }
+
+    function onCanvasClick(e) {
+      // Allow clicking 3D crystals directly to jump to that scene
+      mouseVec.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouseVec.y = -(e.clientY / window.innerHeight) * 2 + 1;
+      raycaster.setFromCamera(mouseVec, camera);
+      const intersects = raycaster.intersectObjects(waypointMeshes);
+      if (intersects.length > 0) {
+        const clickedIndex = intersects[0].object.userData.sceneIndex;
+        if (clickedIndex !== undefined) {
+          goToScene(clickedIndex);
+        }
+      }
+    }
+
+    // =========================================================================
+    // 5. UI & STORYBOARD SYNCHRONIZATION LOGIC
+    // =========================================================================
+    function renderSceneUI(index) {
+      const data = SCENES[index];
+      const panel = document.getElementById('quest-panel');
+
+      // Stop ongoing TTS speech when switching scenes
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        document.getElementById('tts-label').textContent = 'Suara Bot';
+        document.getElementById('tts-icon').className = 'fa-solid fa-volume-low';
+      }
+
+      // Brief transition effect
+      panel.classList.add('quest-hidden');
+
+      setTimeout(() => {
+        // Header & Badges
+        document.getElementById('scene-step-pill').textContent = `ADEGAN ${String(data.id).padStart(2, '0')} / 16`;
+        document.getElementById('scene-title').textContent = data.title;
+        document.getElementById('scene-subtitle').innerHTML = `
+          <span><i class="fa-regular fa-clone text-sky-400 mr-1"></i>${data.subtitle}</span>
+          <span>•</span>
+          <span class="text-amber-300 font-semibold"><i class="fa-solid fa-robot mr-1"></i>Robot Galaxy: "${data.botName}"</span>
+        `;
+        document.getElementById('scene-duration-badge').innerHTML = `
+          <i class="fa-regular fa-clock"></i> <span>${data.duration}</span>
+        `;
+
+        // Slide 16 Return to Intro Button Control
+        const returnIntroBtn = document.getElementById('btn-return-intro');
+        if (data.id === 16) {
+          returnIntroBtn.classList.remove('hidden');
+          returnIntroBtn.classList.add('flex');
+        } else {
+          returnIntroBtn.classList.add('hidden');
+          returnIntroBtn.classList.remove('flex');
+        }
+
+        // Left Telemetry Card
+        document.getElementById('left-bot-name').textContent = data.botName;
+        document.getElementById('left-bot-status').textContent = data.botStatus;
+        document.getElementById('coords- text').textContent = `SEC-${String(data.id).padStart(2, '0')} // ORBIT`;
+
+        // XP & Rank Progress
+        const xpPercent = Math.round(((index + 1) / SCENES.length) * 100);
+        document.getElementById('xp-bar-fill').style.width = `${xpPercent}%`;
+        document.getElementById('xp-percent-text').textContent = `${xpPercent}% Energi`;
+        document.getElementById('xp-rank-title').innerHTML = `<i class="fa-solid fa-seedling mr-1"></i>${RANKS[index]}`;
+
+        // Visual Hologram Card
+        document.getElementById('scene-image').src = data.image;
+        document.getElementById('scene-visual-icon').className = `fa-solid ${data.visualIcon} text-lg`;
+        document.getElementById('scene-visual-title').textContent = data.visualTitle;
+        document.getElementById('scene-visual-desc').textContent = data.visualDesc;
+        // Also update minimized bar icon & title
+        const miniIcon = document.getElementById('scene-visual-icon-mini');
+        const miniTitle = document.getElementById('scene-visual-title-mini');
+        if (miniIcon) miniIcon.className = `fa-solid ${data.visualIcon} text-xs`;
+        if (miniTitle) miniTitle.textContent = data.visualTitle;
+
+        // Main 3 Content Cards
+        document.getElementById('narasi-label').textContent = data.narasiLabel;
+        document.getElementById('scene-narasi').textContent = data.narasi;
+
+        document.getElementById('aktivitas-label').textContent = data.aktivitasLabel;
+        document.getElementById('scene-aktivitas').textContent = data.aktivitas;
+
+        document.getElementById('output-label').textContent = data.outputLabel;
+        document.getElementById('scene-output').textContent = data.output;
+
+        // Special Interactive Action Portals (Links, Doc Embed, Milestone Celebrations)
+        const portalEl = document.getElementById('scene-action-portal');
+        if (data.actionType === 'link') {
+          portalEl.classList.remove('hidden');
+          portalEl.innerHTML = `
+            <a href="${data.actionUrl}" target="_blank" class="btn-eco w-full py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg">
+              <i class="fa-solid fa-up-right-from-square"></i> ${data.actionLabel}
+            </a>
+          `;
+        } else if (data.actionType === 'doc_embed') {
+          portalEl.classList.remove('hidden');
+          portalEl.innerHTML = `
+            <div class="flex flex-col sm:flex-row gap-2">
+              <button onclick="openDocModal()" class="btn-eco flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-eye"></i> Pratinjau Dokumen
+              </button>
+              <a href="${data.actionUrl}" target="_blank" class="btn-amber flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-cloud-arrow-down"></i> Unduh Templat
+              </a>
+            </div>
+          `;
+        } else if (data.actionType === 'celebrate') {
+          portalEl.classList.remove('hidden');
+          portalEl.innerHTML = `
+            <button onclick="triggerCelebrationBurst()" class="btn-amber w-full py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg">
+              <i class="fa-solid fa-trophy"></i> ${data.actionLabel}
+            </button>
+          `;
+          triggerCelebrationBurst();
+        } else {
+          portalEl.classList.add('hidden');
+          portalEl.innerHTML = '';
+        }
+
+        // Prev / Next Button States
+        document.getElementById('btn-prev').disabled = index === 0;
+        const nextBtn = document.getElementById('btn-next');
+        if (index === SCENES.length - 1) {
+          nextBtn.innerHTML = `<span>Ulangi dari Stasiun 1</span> <i class="fa-solid fa-rotate-left"></i>`;
+        } else {
+          nextBtn.innerHTML = `<span>Terbang ke Stasiun ${index + 2}</span> <i class="fa-solid fa-shuttle-space"></i>`;
+        }
+
+        // Update Bottom Constellation Trail
+        updateWaypointTrailUI(index);
+
+        panel.classList.remove('quest-hidden');
+      }, 150);
+    }
+
+    function buildWaypointTrailUI() {
+      const container = document.getElementById('waypoint-trail');
+      container.innerHTML = '';
+      SCENES.forEach((sc, idx) => {
+        const btn = document.createElement('button');
+        btn.className = `waypoint-dot w-7 h-7 rounded-full border border-slate-600 bg-slate-900/90 text-[11px] font-tech font-bold text-slate-300 flex items-center justify-center shrink-0`;
+        btn.textContent = sc.id;
+        btn.title = sc.title;
+        btn.onclick = () => goToScene(idx);
+        container.appendChild(btn);
+      });
+    }
+
+    function updateWaypointTrailUI(activeIndex) {
+      const dots = document.querySelectorAll('.waypoint-dot');
+      dots.forEach((dot, idx) => {
+        dot.classList.remove('active', 'completed');
+        if (idx === activeIndex) {
+          dot.classList.add('active');
+        } else if (idx < activeIndex) {
+          dot.classList.add('completed');
+        }
+      });
+    }
+
+    function buildOverviewModalUI() {
+      const grid = document.getElementById('overview-grid');
+      grid.innerHTML = '';
+      SCENES.forEach((sc, idx) => {
+        const card = document.createElement('div');
+        card.className = 'eco-glass-subtle p-3.5 rounded-2xl border border-slate-700/70 hover:border-emerald-400 cursor-pointer transition flex flex-col justify-between gap-2';
+        card.onclick = () => {
+          toggleOverviewModal();
+          goToScene(idx);
+        };
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between text-[10px] font-bold uppercase text-emerald-300 mb-1">
+              <span>Stasiun ${String(sc.id).padStart(2, '0')}</span>
+              <span class="text-amber-300">${sc.duration}</span>
+            </div>
+            <h4 class="text-xs font-bold text-white leading-snug">${sc.title}</h4>
+          </div>
+          <div class="text-[11px] text-slate-400 flex items-center gap-1.5 pt-2 border-t border-slate-800">
+            <i class="fa-solid ${sc.visualIcon} text-sky-400"></i>
+            <span class="truncate">${sc.botName}</span>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // Navigation Functions
+    function goToScene(index) {
+      if (index < 0) index = 0;
+      if (index >= SCENES.length) index = 0;
+      currentSceneIndex = index;
+      playSynthSound('step');
+      update3DTargetsForScene(index, false);
+      renderSceneUI(index);
+    }
+
+    function nextScene() {
+      if (currentSceneIndex < SCENES.length - 1) {
+        goToScene(currentSceneIndex + 1);
+      } else {
+        goToScene(0);
+      }
+    }
+
+    function prevScene() {
+      if (currentSceneIndex > 0) {
+        goToScene(currentSceneIndex - 1);
+      }
+    }
+
+    // Keyboard Navigation (Arrow Keys / Space)
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') nextScene();
+      if (e.key === 'ArrowLeft') prevScene();
+      if (e.key === 'Escape') {
+        closeDocModal();
+        closePresenterChallenge();
+        document.getElementById('overview-modal').classList.replace('flex', 'hidden');
+      }
+    });
+
+    // =========================================================================
+    // 6. MODALS, HUD TOGGLE & PRESENTER STOPWATCH
+    // =========================================================================
+    function toggleHUD() {
+      const hud = document.getElementById('hud-layer');
+      const banner = document.getElementById('freelook-banner');
+      if (hud.style.opacity === '0') {
+        hud.style.opacity = '1';
+        hud.style.pointerEvents = 'none';
+        banner.classList.add('hidden');
+      } else {
+        hud.style.opacity = '0';
+        hud.style.pointerEvents = 'none';
+        banner.classList.remove('hidden');
+      }
+    }
+
+    function openDocModal() {
+      const m = document.getElementById('doc-modal');
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+      playSynthSound('step');
+    }
+
+    function closeDocModal() {
+      const m = document.getElementById('doc-modal');
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
+
+    function toggleOverviewModal() {
+      const m = document.getElementById('overview-modal');
+      if (m.classList.contains('hidden')) {
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+        playSynthSound('step');
+      } else {
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+      }
+    }
+
+    function openPresenterChallenge() {
+      const sc = SCENES[currentSceneIndex];
+      document.getElementById('challenge-scene-name').textContent = sc.title;
+      document.getElementById('challenge-prompt-text').textContent = `"${sc.challengePrompt}"`;
+      document.getElementById('wheel-result').classList.add('hidden');
+
+      const m = document.getElementById('challenge-modal');
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+      playSynthSound('step');
+    }
+
+    function closePresenterChallenge() {
+      const m = document.getElementById('challenge-modal');
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
+
+    function spinSubjectWheel() {
+      const subjects = [
+        "Rumpun Matematika & Sains (IPA/IPAS)",
+        "Rumpun Bahasa & Sastra (Indonesia/Inggris/Daerah)",
+        "Rumpun Kejuruan & Produktif SMK / Teknologi",
+        "Rumpun Sosial, PPKn & Sejarah",
+        "Rumpun Pendidikan Agama & Budi Pekerti",
+        "Rumpun Seni Budaya, PJOK & Muatan Lokal",
+        "Rumpun Bimbingan Konseling (BK)"
+      ];
+      const resBox = document.getElementById('wheel-result');
+      const winnerTxt = document.getElementById('wheel-winner-text');
+      resBox.classList.remove('hidden');
+
+      let spins = 0;
+      const interval = setInterval(() => {
+        winnerTxt.textContent = subjects[Math.floor(Math.random() * subjects.length)];
+        playSynthSound('step');
+        spins++;
+        if (spins > 10) {
+          clearInterval(interval);
+          playSynthSound('fanfare');
+        }
+      }, 90);
+    }
+
+    // Presenter Stopwatch
+    let stopwatchSeconds = 0;
+    let stopwatchInterval = null;
+    function toggleStopwatch() {
+      if (stopwatchInterval) {
+        clearInterval(stopwatchInterval);
+        stopwatchInterval = null;
+      } else {
+        stopwatchInterval = setInterval(() => {
+          stopwatchSeconds++;
+          const mins = String(Math.floor(stopwatchSeconds / 60)).padStart(2, '0');
+          const secs = String(stopwatchSeconds % 60).padStart(2, '0');
+          document.getElementById('stopwatch-display').textContent = `${mins}:${secs}`;
+        }, 1000);
+      }
+      playSynthSound('step');
+    }
+
+    // =========================================================================
+    // 7. INITIALIZE ON WINDOW LOAD
+    // =========================================================================
+    function dismissOperaIntro() {
+      const intro = document.getElementById('opera-intro');
+      if (!intro || intro.classList.contains('is-leaving')) return;
+      intro.classList.add('is-leaving');
+      window.setTimeout(() => { if (intro.parentNode) intro.parentNode.removeChild(intro); }, 1500);
+    }
+
+    function returnToIntro() {
+      // Re-create or re-display the intro screen overlay smoothly
+      let intro = document.getElementById('opera-intro');
+      if (!intro) {
+        intro = document.createElement('section');
+        intro.id = 'opera-intro';
+        intro.className = 'opera-intro';
+        intro.setAttribute('aria-label', 'Opening animation ECO GALAXY ODYSSEY');
+        intro.innerHTML = `
+          <div class="opera-stage">
+            <div class="opera-emblem">
+              <svg viewBox="0 0 200 200" role="img" aria-label="Emblem daun dan orbit">
+                <defs>
+                  <linearGradient id="operaGold2" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff1bd"/><stop offset=".48" stop-color="#c6a45d"/><stop offset="1" stop-color="#80622d"/></linearGradient>
+                  <linearGradient id="operaGreen2" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#047857"/><stop offset="1" stop-color="#6ee7b7"/></linearGradient>
+                </defs>
+                <circle class="draw" cx="100" cy="100" r="82" fill="none" stroke="url(#operaGold2)" stroke-width="1.6"/>
+                <ellipse class="draw" cx="100" cy="100" rx="65" ry="28" fill="none" stroke="url(#operaGold2)" stroke-width="1.4" transform="rotate(-38 100 100)"/>
+                <path d="M100 146 C62 124 54 80 91 48 C113 76 130 106 100 146Z" fill="url(#operaGreen2)" stroke="#b7f7d7" stroke-width="1.2"/>
+                <path d="M100 145 C99 107 94 79 91 49 M100 111 L77 88 M101 128 L119 102" fill="none" stroke="#e5f9eb" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M100 146 C126 132 151 103 137 72 C117 82 103 105 100 146Z" fill="#0d8b67" stroke="#d5fbe6" stroke-width="1"/>
+                <circle cx="100" cy="100" r="4" fill="#fff0b5"/>
+              </svg>
+            </div>
+            <div class="opera-title">ECO-GALAXY ODYSSEY</div>
+            <div class="opera-subtitle">ADIWIYATA · AI · IMMERSIVE LEARNING</div>
+            <div class="opera-rule"></div>
+          </div>
+          <button class="opera-skip" type="button" onclick="dismissOperaIntro()">MASUK · SKIP INTRO</button>
+        `;
+        document.body.appendChild(intro);
+      } else {
+        intro.classList.remove('is-leaving');
+      }
+      goToScene(0);
+      playSynthSound('fanfare');
+    }
+
+    window.onload = function () {
+      initBgmPlaylistUI();
+      buildWaypointTrailUI();
+      buildOverviewModalUI();
+      init3DWorld();
+      renderSceneUI(0);
+      animate3D();
+    };
+  </script>
+</body>
+</html>
